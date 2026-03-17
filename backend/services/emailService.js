@@ -1,15 +1,31 @@
 import nodemailer from "nodemailer";
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const isEmailConfigured =
+  process.env.EMAIL_USER &&
+  process.env.EMAIL_PASS &&
+  !process.env.EMAIL_USER.startsWith("your_");
+
+let transporter = null;
+if (isEmailConfigured) {
+  transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+}
+
+const sendMail = async (mailOptions) => {
+  if (!transporter) {
+    console.log("Email not configured, skipping:", mailOptions.subject);
+    return;
+  }
+  await transporter.sendMail(mailOptions);
+};
 
 export const sendDonationReceipt = async (toEmail, donorName, amount, campaignTitle) => {
-  await transporter.sendMail({
+  await sendMail({
     from: process.env.EMAIL_USER,
     to: toEmail,
     subject: "Donation Receipt",
@@ -22,7 +38,7 @@ export const sendDonationReceipt = async (toEmail, donorName, amount, campaignTi
 };
 
 export const sendCampaignApproved = async (toEmail, campaignTitle) => {
-  await transporter.sendMail({
+  await sendMail({
     from: process.env.EMAIL_USER,
     to: toEmail,
     subject: "Your campaign is now live!",
@@ -35,7 +51,7 @@ export const sendCampaignApproved = async (toEmail, campaignTitle) => {
 };
 
 export const sendCampaignRejected = async (toEmail, campaignTitle, reason) => {
-  await transporter.sendMail({
+  await sendMail({
     from: process.env.EMAIL_USER,
     to: toEmail,
     subject: "Campaign Update",

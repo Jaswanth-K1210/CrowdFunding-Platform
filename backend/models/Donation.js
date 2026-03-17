@@ -19,6 +19,9 @@ const donationSchema = new mongoose.Schema(
     paymentId: {
       type: String,
     },
+    orderId: {
+      type: String,
+    },
     paymentGateway: {
       type: String,
       default: "razorpay",

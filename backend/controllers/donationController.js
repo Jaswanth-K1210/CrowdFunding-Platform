@@ -36,6 +36,7 @@ export const initiateDonation = async (req, res) => {
       keyId: process.env.RAZORPAY_KEY_ID,
     });
   } catch (error) {
+    console.error("initiateDonation error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -52,11 +53,12 @@ export const verifyDonation = async (req, res) => {
       return res.status(400).json({ message: "Payment verification failed" });
     }
 
-    // Update donation
+    // Update donation with payment details
     const donation = await Donation.findByIdAndUpdate(
       donationId,
       {
         paymentId: razorpayPaymentId,
+        orderId: razorpayOrderId,
         paymentStatus: "completed",
       },
       { new: true }
