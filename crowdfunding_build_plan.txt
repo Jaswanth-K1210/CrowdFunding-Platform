@@ -1,0 +1,661 @@
+
+
+
+
+
+
+CROWDFUNDING PLATFORM
+System Design & Architecture Plan
+
+
+Full-Stack Web Application
+React | Node.js | Express.js | MongoDB
+Stripe / Razorpay Payment Integration
+
+
+
+
+
+
+Prepared by: Jaswanth
+Date: March 2026
+
+1. Project overview
+This document outlines the complete system design, architecture, database schema, API structure, and phased build plan for a full-stack crowdfunding platform. The platform enables users to create fundraising campaigns, discover and donate to campaigns, and track donation progress in real time.
+
+1.1 Core objectives
+	•	Allow authenticated users to create, manage, and publish fundraising campaigns
+	•	Provide a public discovery page with search, filter, and category browsing
+	•	Integrate payment gateway (Stripe/Razorpay) for secure donation processing
+	•	Admin approval workflow before campaigns go live
+	•	Automated email notifications for donations, campaign milestones, and approvals
+	•	Real-time progress tracking with percentage-based progress bars
+	•	Donor contribution history and campaign analytics dashboard
+
+1.2 Tech stack decisions
+Layer
+Technology
+Rationale
+Frontend
+React 18 + Vite
+Component-based UI, fast HMR, large ecosystem
+State mgmt
+Redux Toolkit / Zustand
+Predictable state for auth, campaigns, cart
+Styling
+Tailwind CSS
+Utility-first, rapid prototyping, responsive
+Backend
+Node.js + Express.js
+Non-blocking I/O, rich middleware ecosystem
+Database
+MongoDB + Mongoose
+Flexible schema for campaigns, nested donations
+Auth
+JWT + bcrypt
+Stateless auth with refresh token rotation
+Payments
+Stripe / Razorpay
+Webhook-driven, PCI compliant, test mode
+Email
+Nodemailer + templates
+Transactional emails, HTML templates
+File storage
+Cloudinary / AWS S3
+Campaign images, user avatars
+Deployment
+Docker + Nginx + VPS
+Containerized, reverse proxy, SSL
+
+2. System architecture
+The platform follows a layered architecture with clear separation of concerns across four tiers: Client, API Gateway, Service, and Data layers. All communication between client and server happens over HTTPS with JWT bearer tokens.
+
+2.1 Architecture layers
+
+Client layer (React SPA): Single-page application served via Nginx. Handles routing (React Router v6), state management, form validation, and UI rendering. Communicates exclusively via REST API calls to the backend.
+
+API gateway (Express.js): Central entry point for all requests. Handles JWT verification, role-based access control (RBAC), request validation (Joi/Zod), rate limiting (express-rate-limit), CORS configuration, and request logging (Morgan/Winston).
+
+Service layer: Business logic split into discrete services — Auth Service (registration, login, password reset, token refresh), Campaign Service (CRUD operations, status transitions, search/filter), Payment Service (Stripe/Razorpay integration, webhook processing), and Notification Service (email dispatch via Nodemailer).
+
+Data layer (MongoDB): Document-oriented storage with Mongoose ODM. Collections: Users, Campaigns, Donations, Notifications, CampaignUpdates. Indexed on frequently queried fields (status, category, creatorId, donorId).
+
+2.2 Request flow
+Here is how a typical donation request flows through the system:
+	•	User clicks “Donate” on the React frontend, entering amount and payment details
+	•	Frontend sends POST /api/donations with JWT token in Authorization header
+	•	Express middleware validates JWT, extracts userId, validates request body
+	•	Payment Service creates a Stripe/Razorpay payment intent and returns clientSecret
+	•	Frontend confirms payment using Stripe.js / Razorpay checkout SDK
+	•	Payment gateway sends webhook to POST /api/webhooks/stripe on success
+	•	Webhook handler verifies signature, updates Donation record status to “completed”
+	•	Campaign raisedAmount is atomically incremented using MongoDB $inc operator
+	•	Notification Service sends confirmation email to donor and campaign creator
+	•	Frontend polls or receives updated campaign data showing new progress bar
+
+3. Database schema design
+MongoDB collections with Mongoose schemas. All documents include automatic createdAt/updatedAt timestamps via Mongoose timestamps option.
+
+3.1 Users collection
+Field
+Type
+Details
+_id
+ObjectId
+Auto-generated primary key
+name
+String
+Required, trimmed, 2-50 chars
+email
+String
+Required, unique, lowercase, indexed
+passwordHash
+String
+bcrypt hashed, min 8 chars original
+role
+String
+Enum: user, admin. Default: user
+avatar
+String
+Cloudinary URL, optional
+isVerified
+Boolean
+Email verification status, default false
+resetPasswordToken
+String
+Hashed token for password reset
+resetPasswordExpires
+Date
+Token expiry (1 hour from generation)
+
+3.2 Campaigns collection
+Field
+Type
+Details
+_id
+ObjectId
+Auto-generated primary key
+creatorId
+ObjectId
+Ref: Users. Indexed. Required
+title
+String
+Required, 5-100 chars
+description
+String
+Required, rich text (sanitized HTML)
+category
+String
+Enum: education, medical, emergency, community, tech, other
+goalAmount
+Number
+Required, min 100, in smallest currency unit
+raisedAmount
+Number
+Default 0. Updated via $inc on donations
+status
+String
+Enum: draft, pending, active, completed, rejected. Indexed
+deadline
+Date
+Required, must be future date
+images
+Array<String>
+Cloudinary URLs, max 5 images
+adminReviewNote
+String
+Reason for rejection, visible to creator
+donorCount
+Number
+Default 0. Incremented with each unique donor
+
+3.3 Donations collection
+Field
+Type
+Details
+_id
+ObjectId
+Auto-generated primary key
+donorId
+ObjectId
+Ref: Users. Indexed
+campaignId
+ObjectId
+Ref: Campaigns. Indexed
+amount
+Number
+Required, min 1
+paymentIntentId
+String
+Stripe/Razorpay payment ID. Unique
+paymentStatus
+String
+Enum: pending, completed, failed, refunded
+isAnonymous
+Boolean
+Default false. Hides donor name if true
+message
+String
+Optional donor message, max 500 chars
+
+3.4 Notifications collection
+Field
+Type
+Details
+_id
+ObjectId
+Auto-generated primary key
+userId
+ObjectId
+Ref: Users. Indexed
+type
+String
+Enum: donation_received, campaign_approved, campaign_rejected, milestone_reached
+title
+String
+Short notification title
+message
+String
+Notification body text
+isRead
+Boolean
+Default false
+metadata
+Object
+Optional: campaignId, donationId, amount
+
+3.5 Indexes strategy
+	•	Users: unique index on email
+	•	Campaigns: compound index on {status, category} for discovery page filtering
+	•	Campaigns: text index on {title, description} for search
+	•	Donations: compound index on {campaignId, paymentStatus} for aggregation
+	•	Donations: index on {donorId} for contribution history
+	•	Notifications: compound index on {userId, isRead} for unread count
+
+4. API endpoint design
+RESTful API with versioned routes (/api/v1/). All protected routes require JWT in the Authorization header. Admin routes require role=admin.
+
+4.1 Authentication endpoints
+Method
+Endpoint
+Description
+POST
+/api/v1/auth/register
+Register new user, send verification email
+POST
+/api/v1/auth/login
+Login, return access + refresh tokens
+POST
+/api/v1/auth/refresh
+Rotate refresh token, return new access token
+POST
+/api/v1/auth/forgot-password
+Send password reset email with token
+POST
+/api/v1/auth/reset-password/:token
+Reset password using token
+GET
+/api/v1/auth/verify-email/:token
+Verify email address
+GET
+/api/v1/auth/me
+Get current user profile (protected)
+
+4.2 Campaign endpoints
+Method
+Endpoint
+Description
+GET
+/api/v1/campaigns
+List campaigns (paginated, filterable by status, category, search)
+GET
+/api/v1/campaigns/:id
+Get single campaign with donor count and progress
+POST
+/api/v1/campaigns
+Create campaign (protected, status=draft)
+PUT
+/api/v1/campaigns/:id
+Update own campaign (protected, only if draft/rejected)
+DELETE
+/api/v1/campaigns/:id
+Delete own campaign (protected, only if draft)
+POST
+/api/v1/campaigns/:id/submit
+Submit for admin review (status: draft → pending)
+GET
+/api/v1/campaigns/:id/donations
+List donations for a campaign (protected)
+POST
+/api/v1/campaigns/:id/updates
+Post campaign update (creator only)
+
+4.3 Donation endpoints
+Method
+Endpoint
+Description
+POST
+/api/v1/donations
+Create payment intent for donation
+GET
+/api/v1/donations/my-donations
+Get current user donation history
+POST
+/api/v1/webhooks/stripe
+Stripe webhook (signature verified)
+POST
+/api/v1/webhooks/razorpay
+Razorpay webhook (signature verified)
+
+4.4 Admin endpoints
+Method
+Endpoint
+Description
+GET
+/api/v1/admin/campaigns/pending
+List all pending campaigns for review
+PUT
+/api/v1/admin/campaigns/:id/approve
+Approve campaign (pending → active)
+PUT
+/api/v1/admin/campaigns/:id/reject
+Reject campaign with note (pending → rejected)
+GET
+/api/v1/admin/users
+List all users with stats
+GET
+/api/v1/admin/dashboard
+Platform-wide analytics (total raised, active campaigns, etc.)
+
+4.5 Notification endpoints
+Method
+Endpoint
+Description
+GET
+/api/v1/notifications
+Get user notifications (paginated)
+PUT
+/api/v1/notifications/:id/read
+Mark notification as read
+PUT
+/api/v1/notifications/read-all
+Mark all as read
+
+5. Frontend architecture
+
+5.1 Folder structure
+src/
+  ├── components/        (reusable UI: Button, Modal, ProgressBar, Card)
+  ├── pages/             (route-level: Home, Login, Register, CampaignDetails, Dashboard)
+  ├── features/          (Redux slices or Zustand stores: auth, campaigns, donations)
+  ├── hooks/             (custom hooks: useAuth, useCampaigns, useDebounce)
+  ├── services/          (API layer: authService, campaignService, donationService)
+  ├── utils/             (helpers: formatCurrency, calculateProgress, dateUtils)
+  ├── layouts/           (AppLayout, AuthLayout, AdminLayout with sidebar)
+  └── routes/            (ProtectedRoute, AdminRoute, route config)
+
+5.2 Page breakdown
+Page
+Route
+Key components
+Landing page
+/
+Hero section, featured campaigns grid, category pills, stats bar
+Campaign discovery
+/campaigns
+Search bar, category filter, sort dropdown, paginated campaign cards
+Campaign details
+/campaigns/:id
+Image carousel, progress bar, description, donor list, donate button
+Create campaign
+/campaigns/new
+Multi-step form: basics → description → images → review
+User dashboard
+/dashboard
+My campaigns tab, my donations tab, notification bell
+Login / Register
+/login, /register
+Form with validation, OAuth buttons (optional), redirect on success
+Admin panel
+/admin
+Pending campaigns table, approve/reject actions, platform stats
+Donation checkout
+/donate/:campaignId
+Amount input, Stripe Elements / Razorpay button, confirmation
+Profile settings
+/settings
+Edit name, avatar upload, change password
+
+5.3 State management strategy
+	•	Auth state (global): JWT tokens, current user object, isAuthenticated flag. Persisted in httpOnly cookies (tokens) and Redux/Zustand (user object).
+	•	Campaign state (global): Campaign list with pagination metadata, active filters, current campaign detail. Cached with stale-while-revalidate pattern.
+	•	Donation state (local): Payment flow state (amount, payment intent), managed within donation page component.
+	•	Notification state (global): Unread count badge, notification list. Polled every 30 seconds or via WebSocket.
+	•	Form state (local): Managed with React Hook Form + Zod validation schemas per form.
+
+6. Backend architecture
+
+6.1 Folder structure
+server/
+  ├── config/            (db.js, env.js, stripe.js, cloudinary.js)
+  ├── controllers/       (authController, campaignController, donationController, adminController)
+  ├── middleware/         (auth.js, roleCheck.js, validate.js, errorHandler.js, rateLimiter.js)
+  ├── models/            (User.js, Campaign.js, Donation.js, Notification.js)
+  ├── routes/            (authRoutes.js, campaignRoutes.js, donationRoutes.js, adminRoutes.js)
+  ├── services/          (emailService.js, paymentService.js, notificationService.js)
+  ├── utils/             (AppError.js, catchAsync.js, tokenUtils.js, validators.js)
+  ├── templates/         (email HTML templates: welcome, donation-receipt, campaign-approved)
+  └── server.js          (entry point: Express app setup, middleware chain, route mounting)
+
+6.2 Middleware chain (order matters)
+	•	helmet() — Security headers (XSS, clickjacking, MIME sniffing)
+	•	cors({ origin, credentials }) — Whitelist frontend origin
+	•	express.json({ limit: '10kb' }) — Body parser with size limit
+	•	express.raw() on /webhooks/* — Raw body for Stripe signature verification
+	•	rateLimiter — 100 requests/15min per IP on auth routes, 1000/15min general
+	•	morgan/winston — Request logging
+	•	authMiddleware (per-route) — JWT extraction, verification, user attachment to req
+	•	roleMiddleware (per-route) — Check req.user.role against required roles
+	•	validateMiddleware (per-route) — Joi/Zod schema validation on req.body
+	•	globalErrorHandler — Catches all errors, formats consistent JSON response
+
+6.3 Authentication flow
+Registration: User submits name, email, password. Server hashes password with bcrypt (12 salt rounds), creates User document with isVerified=false, sends verification email with signed JWT (1h expiry), returns success message.
+
+Login: User submits email + password. Server finds user by email, compares password hash, generates access token (15min) and refresh token (7 days). Access token sent in response body, refresh token set as httpOnly secure cookie.
+
+Token refresh: Client sends refresh token cookie. Server verifies, generates new pair, invalidates old refresh token (rotation). This prevents token reuse attacks.
+
+Password reset: User requests reset → server generates crypto.randomBytes(32) token, hashes with SHA-256, stores hash + expiry in user document, emails reset link with unhashed token. On reset, server hashes submitted token, compares with stored hash, updates password if match and not expired.
+
+6.4 Payment integration flow
+Both Stripe and Razorpay follow a similar server-initiated payment pattern:
+
+Step 1 — Create payment intent: Frontend sends POST /api/v1/donations with { campaignId, amount }. Server creates a Donation record with status=pending, creates a Stripe PaymentIntent (or Razorpay Order), returns the clientSecret (or orderId) to frontend.
+
+Step 2 — Client-side confirmation: Frontend uses Stripe.js confirmCardPayment() or Razorpay checkout.open() to handle the payment UI and 3D Secure authentication. No card details ever touch your server.
+
+Step 3 — Webhook processing: Payment gateway sends POST to your webhook endpoint. Server verifies webhook signature (stripe.webhooks.constructEvent or razorpay HMAC), then processes the event. On payment_intent.succeeded: update Donation.paymentStatus to completed, increment Campaign.raisedAmount using $inc, increment Campaign.donorCount, create Notification for campaign creator, send receipt email to donor.
+
+Step 4 — Idempotency: Always check if the donation was already processed (by paymentIntentId uniqueness) before updating. Webhooks can fire multiple times.
+
+7. Email notification system
+
+7.1 Email templates needed
+Template
+Trigger
+Recipients
+Welcome email
+User registration
+New user
+Email verification
+Registration / resend
+User
+Password reset
+Forgot password request
+User
+Donation receipt
+Successful donation webhook
+Donor
+Donation received
+Successful donation webhook
+Campaign creator
+Campaign approved
+Admin approves campaign
+Campaign creator
+Campaign rejected
+Admin rejects campaign
+Campaign creator
+Goal reached
+raisedAmount >= goalAmount
+Campaign creator
+Campaign deadline
+24h before deadline (cron job)
+Campaign creator
+
+7.2 Implementation approach
+	•	Use Nodemailer with SMTP transport (Gmail for dev, SendGrid/Mailgun for production)
+	•	HTML email templates using Handlebars or EJS for dynamic content injection
+	•	Queue emails via a simple in-memory queue or Bull/BullMQ (Redis-backed) for production
+	•	Include unsubscribe link in all marketing emails (CAN-SPAM compliance)
+	•	Log all sent emails in a separate EmailLog collection for debugging
+
+8. Security considerations
+
+	•	Input validation on every endpoint using Joi or Zod schemas
+	•	Sanitize rich text (campaign descriptions) with DOMPurify or sanitize-html before storage
+	•	Rate limiting on auth routes (brute force protection) and donation routes (abuse prevention)
+	•	CORS configured to only allow your frontend origin
+	•	Helmet.js for security headers: CSP, X-Frame-Options, HSTS
+	•	MongoDB injection prevention: use Mongoose which parameterizes queries by default
+	•	File upload validation: check MIME type, limit file size (5MB), use Cloudinary transform
+	•	Webhook signature verification: never trust webhook payloads without cryptographic verification
+	•	Environment variables for all secrets (JWT_SECRET, STRIPE_SECRET, DB_URI) — never commit .env
+	•	HTTPS only in production via Nginx with Let’s Encrypt SSL certificates
+	•	Password requirements: minimum 8 characters, hashed with bcrypt (12 rounds)
+	•	Refresh token rotation to prevent token reuse attacks
+
+9. Deployment architecture
+
+9.1 Docker setup
+Three containers orchestrated with Docker Compose:
+	•	Frontend container: Nginx serving React build files, reverse proxy to API
+	•	Backend container: Node.js Express server, connects to MongoDB
+	•	MongoDB container: Official MongoDB image with persistent volume mount
+
+9.2 Nginx configuration
+	•	Serve React static files from /usr/share/nginx/html
+	•	Proxy /api/* requests to backend container (upstream node_backend)
+	•	Enable gzip compression for text, JS, CSS, JSON
+	•	SSL termination with Let’s Encrypt certificates (certbot)
+	•	Client-side routing: try_files $uri /index.html for React Router
+
+9.3 Environment setup
+Variable
+Description
+NODE_ENV
+production / development
+PORT
+Backend server port (default 5000)
+MONGODB_URI
+MongoDB connection string
+JWT_SECRET
+Access token signing secret
+JWT_REFRESH_SECRET
+Refresh token signing secret
+STRIPE_SECRET_KEY
+Stripe API secret key
+STRIPE_WEBHOOK_SECRET
+Stripe webhook endpoint secret
+CLOUDINARY_CLOUD_NAME
+Cloudinary account name
+CLOUDINARY_API_KEY
+Cloudinary API key
+CLOUDINARY_API_SECRET
+Cloudinary API secret
+SMTP_HOST
+Email server host
+SMTP_PORT
+Email server port
+SMTP_USER
+Email account username
+SMTP_PASS
+Email account password
+CLIENT_URL
+Frontend URL for CORS and email links
+
+10. Phased build plan
+A 6-week build plan split into 4 phases. Each phase delivers a working increment that can be tested independently.
+
+Phase 1: Foundation (Week 1-2)
+Goal: Project scaffolding, authentication system, and basic campaign CRUD.
+
+Backend tasks:
+	•	Initialize Node.js project, install dependencies, set up folder structure
+	•	Configure MongoDB connection with Mongoose, create User and Campaign models
+	•	Build auth controller: register, login, refresh token, email verification
+	•	Build auth middleware: JWT verification, role-based access control
+	•	Build campaign controller: create, read (single + list), update, delete
+	•	Add input validation middleware with Joi/Zod schemas
+	•	Set up global error handler and async error wrapper utility
+
+Frontend tasks:
+	•	Initialize React project with Vite, configure Tailwind CSS
+	•	Set up React Router with layout components (App, Auth, Admin)
+	•	Build Login and Register pages with form validation
+	•	Set up API service layer (Axios instance with interceptors for JWT)
+	•	Build campaign listing page with basic cards
+	•	Build create campaign form (multi-step or single page)
+
+Deliverable: Users can register, login, create campaigns, and browse campaign listings.
+
+Phase 2: Payments & Donations (Week 3-4)
+Goal: Complete payment integration, donation tracking, and progress visualization.
+
+Backend tasks:
+	•	Create Donation model and donation controller
+	•	Integrate Stripe SDK: create payment intents, handle webhooks
+	•	Build webhook endpoint with signature verification
+	•	Implement atomic raisedAmount updates using MongoDB $inc
+	•	Build donation history endpoint for donors
+	•	Add Cloudinary integration for campaign image uploads
+
+Frontend tasks:
+	•	Build campaign detail page with image carousel and progress bar
+	•	Integrate Stripe Elements for payment form (card input)
+	•	Build donation confirmation and receipt page
+	•	Build user dashboard: my campaigns and my donations tabs
+	•	Add real-time progress bar component (percentage + amount display)
+
+Deliverable: Users can donate to campaigns with real payment processing, see live progress bars, and view their donation history.
+
+Phase 3: Admin & Notifications (Week 5)
+Goal: Admin approval workflow and automated email notification system.
+
+Backend tasks:
+	•	Build admin controller: list pending campaigns, approve, reject with notes
+	•	Implement campaign status state machine (draft → pending → active/rejected)
+	•	Set up Nodemailer with HTML email templates (Handlebars)
+	•	Build notification service: create in-app notifications on key events
+	•	Create Notification model and API endpoints
+	•	Add cron job for campaign deadline reminders (node-cron)
+
+Frontend tasks:
+	•	Build admin panel: pending campaigns table with approve/reject actions
+	•	Add admin dashboard with platform statistics
+	•	Build notification dropdown/bell icon with unread count badge
+	•	Add campaign status indicators throughout the UI
+
+Deliverable: Admins can review and approve campaigns. Users receive email and in-app notifications for all key events.
+
+Phase 4: Polish & Deploy (Week 6)
+Goal: Production readiness, testing, performance optimization, and deployment.
+
+	•	Add search functionality with MongoDB text indexes and debounced search bar
+	•	Implement pagination on all list endpoints (cursor-based or offset)
+	•	Add responsive design breakpoints for mobile and tablet
+	•	Write API tests with Jest + Supertest for critical flows (auth, donations)
+	•	Add loading skeletons, error boundaries, and empty states to frontend
+	•	Set up Docker Compose with all three containers
+	•	Configure Nginx reverse proxy with SSL
+	•	Deploy to VPS (DigitalOcean/AWS EC2) or Railway/Render
+	•	Set up environment variables, MongoDB Atlas (if cloud DB), and Stripe live keys
+	•	Final end-to-end testing of complete donation flow in production
+
+Deliverable: Fully functional, deployed crowdfunding platform ready for real users.
+
+11. Testing strategy
+
+Layer
+Tool
+What to test
+Unit tests
+Jest
+Utility functions, validators, token generation
+API tests
+Jest + Supertest
+Auth flows, campaign CRUD, donation flow, admin actions
+Integration
+Jest + MongoDB Memory Server
+Full request → DB → response for each endpoint
+Frontend
+React Testing Library
+Component rendering, form validation, user flows
+E2E
+Cypress / Playwright
+Complete user journeys: register → create campaign → donate
+Payment
+Stripe test mode
+Use Stripe test card numbers to verify payment flow
+
+12. Future enhancements (post-MVP)
+
+	•	WebSocket integration (Socket.io) for real-time donation feed on campaign pages
+	•	OAuth login with Google and GitHub for faster onboarding
+	•	Campaign sharing with Open Graph meta tags for rich social media previews
+	•	Analytics dashboard for campaign creators (donation trends, top donors, traffic sources)
+	•	Recurring donations with Stripe subscriptions
+	•	Campaign comments and community discussion thread
+	•	Mobile app using React Native with shared API backend
+	•	Fraud detection: flag suspicious donation patterns (multiple small amounts from same IP)
+	•	Multi-currency support with automatic conversion
