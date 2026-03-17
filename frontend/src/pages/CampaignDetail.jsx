@@ -71,6 +71,7 @@ function CampaignDetail() {
         order_id: orderId,
         name: "CrowdFund",
         description: `Donation to ${campaign.title}`,
+        image: "/favicon.svg",
         handler: async (response) => {
           try {
             await donationService.verify({
@@ -91,10 +92,28 @@ function CampaignDetail() {
         prefill: {
           name: user.name,
           email: user.email,
+          contact: user.phone || "",
+        },
+        notes: {
+          campaignId: id,
+          donationId: donation._id,
+        },
+        theme: {
+          color: "#16a34a",
+        },
+        modal: {
+          ondismiss: () => {
+            toast.error("Payment cancelled");
+            setDonating(false);
+          },
         },
       };
 
       const razor = new window.Razorpay(options);
+      razor.on("payment.failed", (response) => {
+        toast.error(response.error?.description || "Payment failed. Please try again.");
+        setDonating(false);
+      });
       razor.open();
     } catch (error) {
       toast.error(error.response?.data?.message || "Donation failed");
