@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./admin/AdminDashboard";
 import CampaignApproval from "./admin/CampaignApproval";
 import Transactions from "./admin/Transactions";
+import Users from "./admin/Users";
 
 const router = createBrowserRouter([
   {
@@ -30,6 +31,7 @@ const router = createBrowserRouter([
       { path: "admin", element: <AdminDashboard /> },
       { path: "admin/campaigns", element: <CampaignApproval /> },
       { path: "admin/transactions", element: <Transactions /> },
+      { path: "admin/users", element: <Users /> },
     ],
   },
 ]);
