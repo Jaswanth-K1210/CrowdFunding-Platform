@@ -38,8 +38,8 @@ function Users() {
   if (authLoading || loading) return <p className="text-center py-10">Loading...</p>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
-      <div className="flex gap-8 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8 pt-24">
+      <div className="flex gap-8">
         <div className="hidden lg:block">
         <AdminSidebar />        
         </div>

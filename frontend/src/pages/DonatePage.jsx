@@ -52,27 +52,39 @@ function DonatePage() {
   };
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Donate to Campaigns</h1>
+  <div className="flex justify-center bg-gray-50 min-h-screen py-10">
+    <div className="w-full max-w-6xl bg-white p-6 rounded-2xl shadow-md space-y-6">
 
-      <form onSubmit={handleSearch} className="flex gap-3">
+      <h1 className="text-3xl font-bold text-center text-gray-800">
+        Donate to Campaigns
+      </h1>
+
+      {/* Search */}
+      <form
+        onSubmit={handleSearch}
+        className="flex gap-3 justify-center"
+      >
         <input
           type="text"
           placeholder="Search campaigns..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border p-2 flex-1 rounded"
+          className="border border-gray-300 p-3 flex-1 max-w-md rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <button type="submit" className="bg-blue-600 text-white px-4 rounded">
+        <button
+          type="submit"
+          className="bg-blue-600 hover:bg-blue-700 transition text-white px-5 rounded-xl shadow"
+        >
           Search
         </button>
       </form>
 
-      <div className="flex gap-3">
+      {/* Filters */}
+      <div className="flex gap-3 justify-center flex-wrap">
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="border p-2 rounded"
+          className="border border-gray-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">All Categories</option>
           {categories.map((cat) => (
@@ -85,7 +97,7 @@ function DonatePage() {
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value)}
-          className="border p-2 rounded"
+          className="border border-gray-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Sort By</option>
           <option value="most-funded">Most Funded</option>
@@ -94,19 +106,27 @@ function DonatePage() {
         </select>
       </div>
 
+      {/* Content */}
       {loading ? (
-        <p>Loading campaigns...</p>
+        <p className="text-center text-gray-500">
+          Loading campaigns...
+        </p>
       ) : campaigns.length === 0 ? (
-        <p className="text-gray-500">No campaigns found.</p>
+        <p className="text-gray-400 text-center">
+          No campaigns found.
+        </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {campaigns.map((campaign) => (
-            <CampaignCard key={campaign._id} campaign={campaign} />
+            <div className="transform hover:scale-105 transition duration-300">
+              <CampaignCard key={campaign._id} campaign={campaign} />
+            </div>
           ))}
         </div>
       )}
     </div>
-  );
+  </div>
+);
 }
 
 export default DonatePage;

@@ -62,7 +62,7 @@ function CampaignApproval() {
   if (authLoading || loading) return <p className="text-center py-10">Loading...</p>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pt-24 px-8">
       <h1 className="text-3xl font-bold">Campaign Approvals</h1>
 
       <div className="flex gap-3">

@@ -1,15 +1,20 @@
 import Header from "./Header";
 import Footer from "./Footer";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 
 function RootLayout() {
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
+  const isHome = location.pathname === "/";
+  const isFullWidth = isAdmin || isHome;
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Header />
-      <main className="grow max-w-7xl w-full mx-auto px-6 py-6">
+      <main className={isFullWidth ? "grow" : "grow max-w-7xl w-full mx-auto px-6 py-6 pt-24"}>
         <Outlet />
       </main>
-      <Footer />
+      {!isAdmin && <Footer />}
     </div>
   );
 }

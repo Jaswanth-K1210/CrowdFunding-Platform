@@ -67,9 +67,12 @@ function CampaignCard({ campaign }) {
         </div>
 
         {/* Donate CTA */}
-        <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 text-sm uppercase tracking-wide">
+        <Link
+          to={`/campaign/${campaign._id}`}
+          className="block w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 text-sm uppercase tracking-wide text-center"
+        >
           Donate Now
-        </button>
+        </Link>
       </div>
     </div>
   );

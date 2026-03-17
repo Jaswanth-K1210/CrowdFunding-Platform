@@ -1,48 +1,137 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../store/authStore";
+import { FaBars, FaTimes } from "react-icons/fa";
 
 function Header() {
   const { user } = useAuth();
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <header className="bg-white shadow-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-
-        <Link to="/" className="text-2xl font-bold text-blue-600">
+    <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-6xl">
+      <div
+        className={`flex items-center justify-between px-6 py-3 rounded-full transition-all duration-500 ${
+          scrolled
+            ? "bg-gray-900/80 backdrop-blur-xl shadow-2xl shadow-black/10"
+            : "bg-white/80 backdrop-blur-xl shadow-lg"
+        }`}
+      >
+        {/* Logo */}
+        <Link
+          to="/"
+          className={`text-xl font-bold transition-colors ${
+            scrolled ? "text-white" : "text-gray-900"
+          }`}
+        >
           CrowdFund
         </Link>
 
-        <nav className="flex items-center gap-6">
-          <Link to="/" className="text-gray-700 hover:text-blue-600">Home</Link>
-          <Link to="/donate" className="text-gray-700 hover:text-blue-600">Donate</Link>
-          <Link to="/raise" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+        {/* Desktop Nav */}
+        <nav className="hidden md:flex items-center gap-1">
+          <NavLink to="/" scrolled={scrolled}>Home</NavLink>
+          <NavLink to="/donate" scrolled={scrolled}>Donate</NavLink>
+          <Link
+            to="/raise"
+            className="ml-1 bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-full text-sm font-semibold transition-all"
+          >
             Raise Fund
           </Link>
         </nav>
 
-        <div className="flex items-center gap-3">
+        {/* Right Side */}
+        <div className="hidden md:flex items-center gap-2">
           {user ? (
             <>
               {user.role === "admin" && (
-                <Link to="/admin" className="text-gray-700 hover:text-blue-600">Admin</Link>
+                <NavLink to="/admin" scrolled={scrolled}>Admin</NavLink>
               )}
-              <Link to="/dashboard" className="text-gray-700 hover:text-blue-600">Dashboard</Link>
-              <Link to="/profile" className="bg-blue-600 text-white px-4 py-2 rounded-lg">
+              <NavLink to="/dashboard" scrolled={scrolled}>Dashboard</NavLink>
+              <Link
+                to="/profile"
+                className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-full text-sm font-semibold transition-all"
+              >
                 {user.name}
               </Link>
             </>
           ) : (
             <>
-              <Link to="/login" className="text-gray-700 hover:text-blue-600">Login</Link>
-              <Link to="/register" className="bg-blue-600 text-white px-4 py-2 rounded-lg">
+              <NavLink to="/login" scrolled={scrolled}>Login</NavLink>
+              <Link
+                to="/register"
+                className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-full text-sm font-semibold transition-all"
+              >
                 Register
               </Link>
             </>
           )}
         </div>
 
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className={`md:hidden text-lg ${scrolled ? "text-white" : "text-gray-900"}`}
+        >
+          {menuOpen ? <FaTimes /> : <FaBars />}
+        </button>
       </div>
+
+      {/* Mobile Menu */}
+      {menuOpen && (
+        <div className="md:hidden mt-2 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl p-4 space-y-2">
+          <MobileLink to="/" onClick={() => setMenuOpen(false)}>Home</MobileLink>
+          <MobileLink to="/donate" onClick={() => setMenuOpen(false)}>Donate</MobileLink>
+          <MobileLink to="/raise" onClick={() => setMenuOpen(false)}>Raise Fund</MobileLink>
+          {user ? (
+            <>
+              {user.role === "admin" && (
+                <MobileLink to="/admin" onClick={() => setMenuOpen(false)}>Admin</MobileLink>
+              )}
+              <MobileLink to="/dashboard" onClick={() => setMenuOpen(false)}>Dashboard</MobileLink>
+              <MobileLink to="/profile" onClick={() => setMenuOpen(false)}>{user.name}</MobileLink>
+            </>
+          ) : (
+            <>
+              <MobileLink to="/login" onClick={() => setMenuOpen(false)}>Login</MobileLink>
+              <MobileLink to="/register" onClick={() => setMenuOpen(false)}>Register</MobileLink>
+            </>
+          )}
+        </div>
+      )}
     </header>
+  );
+}
+
+function NavLink({ to, scrolled, children }) {
+  return (
+    <Link
+      to={to}
+      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+        scrolled
+          ? "text-gray-300 hover:text-white hover:bg-white/10"
+          : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+      }`}
+    >
+      {children}
+    </Link>
+  );
+}
+
+function MobileLink({ to, onClick, children }) {
+  return (
+    <Link
+      to={to}
+      onClick={onClick}
+      className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 font-medium text-sm"
+    >
+      {children}
+    </Link>
   );
 }
 
