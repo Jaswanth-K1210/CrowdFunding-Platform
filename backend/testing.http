@@ -1,0 +1,147 @@
+
+# AUTH APIs
+
+### Register User
+
+POST http://localhost:5001/api/auth/register
+Content-Type: application/json
+
+{
+"name": "Rahul",
+"email": "rahul@example.com",
+"password": "123456"
+}
+
+### Login User
+
+POST http://localhost:5001/api/auth/login
+Content-Type: application/json
+
+{
+"email": "rahul@example.com",
+"password": "123456"
+}
+
+### Login Admin (pre-seeded, no registration needed)
+
+POST http://localhost:5001/api/auth/login
+Content-Type: application/json
+
+{
+"email": "admin@crowdfunding.com",
+"password": "Admin@123"
+}
+
+### Get Logged User (cookie sent automatically)
+
+GET http://localhost:5001/api/auth/me
+
+### Logout
+
+POST http://localhost:5001/api/auth/logout
+
+# CAMPAIGN APIs
+
+### Create Campaign
+
+POST http://localhost:5001/api/campaigns
+Content-Type: application/json
+
+{
+"title": "Save the Forest",
+"description": "Raising funds to protect rainforests.",
+"category": "environment",
+"goalAmount": 100000,
+"deadline": "2026-12-31"
+}
+
+### Create Another Campaign
+
+POST http://localhost:5001/api/campaigns
+Content-Type: application/json
+
+{
+"title": "Help Flood Victims",
+"description": "Funds for emergency flood relief.",
+"category": "emergency",
+"goalAmount": 50000,
+"deadline": "2026-12-31"
+}
+### Get All  Campaigns
+
+GET http://localhost:5001/api/campaigns
+
+### Get Campaign By ID
+
+GET http://localhost:5001/api/campaigns/REPLACE_CAMPAIGN_ID
+
+### Update Campaign
+
+PUT http://localhost:5001/api/campaigns/REPLACE_CAMPAIGN_ID
+Content-Type: application/json
+
+{
+"title": "Save the Amazon Forest",
+"goalAmount": 120000
+}
+
+### Delete Campaign
+
+DELETE http://localhost:5001/api/campaigns/REPLACE_CAMPAIGN_ID
+
+### ADMIN APIs
+
+### Get Pending Campaigns
+
+GET http://localhost:5001/api/admin/campaigns/pending
+
+### Approve Campaign
+
+PUT http://localhost:5001/api/admin/campaigns/REPLACE_CAMPAIGN_ID/approve
+
+### Reject Campaign
+
+PUT http://localhost:5001/api/admin/campaigns/REPLACE_CAMPAIGN_ID/reject
+
+### Admin Dashboard Stats
+
+GET http://localhost:5001/api/admin/dashboard
+
+### ================================
+### DONATION APIs
+### ================================
+
+### Donate to Campaign
+
+POST http://localhost:5001/api/donations/create
+Content-Type: application/json
+
+{
+"campaignId": "REPLACE_CAMPAIGN_ID",
+"amount": 1000
+}
+
+### Get Donations For Campaign
+
+GET http://localhost:5001/api/donations/campaign/REPLACE_CAMPAIGN_ID
+
+### Get My Donations
+
+GET http://localhost:5001/api/donations/my
+
+### ================================
+### COMMENTS APIs
+### ================================
+
+### Add Comment
+
+POST http://localhost:5001/api/campaigns/REPLACE_CAMPAIGN_ID/comments
+Content-Type: application/json
+
+{
+"message": "Hope this campaign reaches its goal!"
+}
+
+### Get Campaign with Comments
+
+GET http://localhost:5001/api/campaigns/REPLACE_CAMPAIGN_ID
