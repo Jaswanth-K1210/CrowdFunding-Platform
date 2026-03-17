@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { campaignService } from "../../services/campaignService";
-import { formatCurrency } from "../../utils/formatCurrency";
+import CampaignCard from "../campaign/CampaignCard.jsx";
 
 function ExploreCampaigns() {
   const [campaigns, setCampaigns] = useState([]);
@@ -22,43 +22,15 @@ function ExploreCampaigns() {
         <p className="text-center text-gray-500">No campaigns yet. Be the first to create one!</p>
       ) : (
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {campaigns.map((campaign) => {
-            const progress = (campaign.raisedAmount / campaign.goalAmount) * 100;
-
-            return (
-              <motion.div
-                key={campaign._id}
-                whileHover={{ scale: 1.03 }}
-                className="bg-white rounded-xl shadow-lg overflow-hidden"
-              >
-                <Link to={`/campaign/${campaign._id}`}>
-                  <img
-                    src={campaign.images?.[0] || "https://placehold.co/400x200?text=Campaign"}
-                    alt={campaign.title}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="p-5">
-                    <h2 className="text-xl font-semibold mb-2">{campaign.title}</h2>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                      {campaign.description}
-                    </p>
-
-                    <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
-                      <div
-                        className="bg-green-500 h-3 rounded-full"
-                        style={{ width: `${Math.min(progress, 100)}%` }}
-                      />
-                    </div>
-
-                    <div className="flex justify-between text-sm text-gray-700">
-                      <span>Raised: {formatCurrency(campaign.raisedAmount)}</span>
-                      <span>Goal: {formatCurrency(campaign.goalAmount)}</span>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            );
-          })}
+          {campaigns.map((campaign) => (
+            <motion.div
+              key={campaign._id}
+              whileHover={{ scale: 1.03 }}
+              className="h-full"
+            >
+              <CampaignCard campaign={campaign} />
+            </motion.div>
+          ))}
         </div>
       )}
 

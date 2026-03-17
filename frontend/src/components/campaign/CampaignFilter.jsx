@@ -30,10 +30,14 @@ function CampaignFilter({ onFilterChange }) {
             className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
           >
             <option value="">All Categories</option>
-            <option value="environment">Environment</option>
+            <option value="medical">Medical</option>
             <option value="education">Education</option>
-            <option value="health">Health</option>
+            <option value="animals">Animals</option>
+            <option value="business">Business</option>
+            <option value="ngo">NGO</option>
             <option value="community">Community</option>
+            <option value="emergency">Emergency</option>
+            <option value="technology">Technology</option>
           </select>
         </div>
 

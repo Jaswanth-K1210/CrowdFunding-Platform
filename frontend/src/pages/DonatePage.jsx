@@ -1,20 +1,31 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { campaignService } from "../services/campaignService";
-import { formatCurrency } from "../utils/formatCurrency";
+import CampaignCard from "../components/campaign/CampaignCard.jsx";
 
 function DonatePage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [campaigns, setCampaigns] = useState([]);
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
-  const [sort, setSort] = useState("");
+  const [search, setSearch] = useState(searchParams.get("search") || "");
+  const [category, setCategory] = useState(searchParams.get("category") || "");
+  const [sort, setSort] = useState(searchParams.get("sort") || "");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchCampaigns();
-  }, [category, sort]);
+    // Update URL when filters change
+    const params = new URLSearchParams();
+    if (category) params.set("category", category);
+    if (sort) params.set("sort", sort);
+    if (search) params.set("search", search);
+    setSearchParams(params);
+  }, [category, sort, search, setSearchParams]);
 
-  const fetchCampaigns = async () => {
+  useEffect(() => {
+    fetchCampaigns();
+  }, [category, sort, search]);
+
+  const fetchCampaigns = useCallback(async () => {
     try {
       const params = { status: "approved", limit: 50 };
       if (category) params.category = category;
@@ -28,17 +39,17 @@ function DonatePage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    fetchCampaigns();
-  };
+  }, [category, sort, search, campaignService]);
 
   const categories = [
     "education", "medical", "animals", "business",
     "ngo", "community", "emergency", "technology",
   ];
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetchCampaigns();
+  };
 
   return (
     <div className="space-y-6">
@@ -88,48 +99,10 @@ function DonatePage() {
       ) : campaigns.length === 0 ? (
         <p className="text-gray-500">No campaigns found.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {campaigns.map((campaign) => {
-            const progress = Math.min(
-              (campaign.raisedAmount / campaign.goalAmount) * 100,
-              100
-            );
-
-            return (
-              <Link
-                key={campaign._id}
-                to={`/campaign/${campaign._id}`}
-                className="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition"
-              >
-                <img
-                  src={campaign.images?.[0] || "https://placehold.co/400x200?text=Campaign"}
-                  alt={campaign.title}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="p-4">
-                  <h2 className="text-lg font-bold text-gray-800">{campaign.title}</h2>
-                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                    {campaign.description}
-                  </p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    By: {campaign.creatorId?.name || "Unknown"}
-                  </p>
-
-                  <div className="mt-3">
-                    <div className="h-2 bg-gray-200 rounded-full">
-                      <div
-                        className="h-2 bg-green-500 rounded-full"
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {formatCurrency(campaign.raisedAmount)} / {formatCurrency(campaign.goalAmount)}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {campaigns.map((campaign) => (
+            <CampaignCard key={campaign._id} campaign={campaign} />
+          ))}
         </div>
       )}
     </div>
