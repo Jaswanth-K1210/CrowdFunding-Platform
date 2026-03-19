@@ -1,8 +1,1 @@
-# TODO: Fix Category Filtering Bug [UPDATED]
-
-## Steps:
-- [x] Discovered: useCampaigns hook unused; DonatePage fetches directly but misses URL ?category= param
-- [x] Step 1: Update frontend/src/pages/DonatePage.jsx - Added useSearchParams, URL sync for category/sort/search, fixed duplicate fetchCampaigns
-- [x] Step 2: Update frontend/src/components/campaign/CampaignFilter.jsx - Fixed category options to match backend
-- [ ] Step 3: Test: Click category card → /donate?category=medical shows only medical campaigns
-- [x] Step 4: Mark complete
+# GitHub Sync Plan Steps&#10;&#10;## Status: In Progress&#10;&#10;1. [ ] Install GitHub CLI (gh)&#10;2. [ ] Add new remote `myth21` -> https://github.com/myth-21/crowdfund-platform.git&#10;3. [ ] Create branch `blackboxai/add-crowdfunding-platform`&#10;4. [ ] Push branch to myth21 remote&#10;5. [ ] Create PR using gh pr create&#10;6. [ ] Complete
