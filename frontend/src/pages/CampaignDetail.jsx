@@ -150,7 +150,7 @@ function CampaignDetail() {
 
         <div>
           <span className={`text-xs px-2 py-1 rounded ${
-            campaign.status === "approved" ? "bg-green-100 text-green-700" :
+            campaign.status === "approved" ? "bg-emerald-100 text-emerald-700" :
             campaign.status === "pending" ? "bg-yellow-100 text-yellow-700" :
             "bg-red-100 text-red-700"
           }`}>
@@ -174,7 +174,7 @@ function CampaignDetail() {
           <div>
             <h2 className="text-xl font-semibold mb-2">Documents & Proof</h2>
             {campaign.documents.map((doc, index) => (
-              <a key={index} href={doc} target="_blank" rel="noreferrer" className="block text-blue-600 hover:underline">
+              <a key={index} href={doc} target="_blank" rel="noreferrer" className="block text-emerald-600 hover:underline">
                 View Document {index + 1}
               </a>
             ))}
@@ -236,7 +236,7 @@ function CampaignDetail() {
               <button
                 onClick={handleDonate}
                 disabled={donating}
-                className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-400"
+                className="w-full bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 disabled:bg-gray-400"
               >
                 {donating ? "Processing..." : "Donate Now"}
               </button>
@@ -244,7 +244,7 @@ function CampaignDetail() {
           )}
 
           <button
-            className="w-full mt-3 text-blue-600 text-sm hover:underline"
+            className="w-full mt-3 text-emerald-600 text-sm hover:underline"
             onClick={() => {
               navigator.clipboard.writeText(window.location.href);
               toast.success("Link copied!");

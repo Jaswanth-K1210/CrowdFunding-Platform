@@ -37,7 +37,7 @@ function ExploreCampaigns() {
       <div className="text-center mt-8">
         <Link
           to="/donate"
-          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+          className="bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700"
         >
           View All Campaigns
         </Link>

@@ -9,7 +9,7 @@ function RaiseFundCTA() {
   };
 
   return (
-    <div className="bg-blue-600 text-white text-center py-12 rounded-lg">
+    <div className="bg-emerald-600 text-white text-center py-12 rounded-lg">
 
       <h2 className="text-3xl font-bold mb-4">
         Start Raising Funds Today
@@ -21,7 +21,7 @@ function RaiseFundCTA() {
 
       <button
         onClick={handleClick}
-        className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200"
+        className="bg-white text-emerald-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200"
       >
         Start Raising Funds
       </button>

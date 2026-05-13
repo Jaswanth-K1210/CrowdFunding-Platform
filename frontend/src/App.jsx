@@ -10,6 +10,8 @@ import Register from "./pages/Register";
 import DonatePage from "./pages/DonatePage";
 import CampaignDetail from "./pages/CampaignDetail";
 import Dashboard from "./pages/Dashboard";
+import TrustUs from "./pages/TrustUs";
+import AdminLayout from "./admin/AdminLayout";
 import AdminDashboard from "./admin/AdminDashboard";
 import CampaignApproval from "./admin/CampaignApproval";
 import Transactions from "./admin/Transactions";
@@ -28,10 +30,17 @@ const router = createBrowserRouter([
       { path: "dashboard", element: <Dashboard /> },
       { path: "profile", element: <Profile /> },
       { path: "raise", element: <RaiseFund /> },
-      { path: "admin", element: <AdminDashboard /> },
-      { path: "admin/campaigns", element: <CampaignApproval /> },
-      { path: "admin/transactions", element: <Transactions /> },
-      { path: "admin/users", element: <Users /> },
+      { path: "trust-us", element: <TrustUs /> },
+      {
+        path: "admin",
+        element: <AdminLayout />,
+        children: [
+          { index: true, element: <AdminDashboard /> },
+          { path: "campaigns", element: <CampaignApproval /> },
+          { path: "transactions", element: <Transactions /> },
+          { path: "users", element: <Users /> },
+        ],
+      },
     ],
   },
 ]);

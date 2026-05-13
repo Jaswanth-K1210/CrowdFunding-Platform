@@ -59,7 +59,7 @@ export const approveCampaign = async (req, res) => {
     const campaign = await Campaign.findByIdAndUpdate(
       req.params.id,
       { status: "approved", adminNote: req.body.adminNote || "" },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!campaign) {
@@ -82,7 +82,7 @@ export const rejectCampaign = async (req, res) => {
     const campaign = await Campaign.findByIdAndUpdate(
       req.params.id,
       { status: "rejected", adminNote: req.body.adminNote || "" },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!campaign) {

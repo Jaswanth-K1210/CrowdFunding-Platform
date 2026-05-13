@@ -3,6 +3,7 @@ import Campaign from "../models/Campaign.js";
 import User from "../models/User.js";
 import { createOrder, verifyPayment } from "../services/paymentService.js";
 import { sendDonationReceipt } from "../services/emailService.js";
+import { generateInvoice } from "../utils/invoiceGenerator.js";
 
 // POST /api/donations/create — initiate donation (creates Razorpay order)
 export const initiateDonation = async (req, res) => {
@@ -61,7 +62,7 @@ export const verifyDonation = async (req, res) => {
         orderId: razorpayOrderId,
         paymentStatus: "completed",
       },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     // Atomically update campaign raisedAmount and donorCount
@@ -83,14 +84,59 @@ export const verifyDonation = async (req, res) => {
       $inc: { "stats.totalRaised": donation.amount },
     });
 
-    // Send receipt email (non-blocking)
+    // Send receipt email (non-blocking) with auto-generated invoice
     const donor = await User.findById(donation.donorId);
-    sendDonationReceipt(donor.email, donor.name, donation.amount, campaign.title).catch(
-      console.error
-    );
+    (async () => {
+      try {
+        const invoiceBuffer = await generateInvoice(donation, donor, campaign);
+        await sendDonationReceipt(donor.email, donor.name, donation.amount, campaign.title, campaign._id, invoiceBuffer);
+      } catch (err) {
+        console.error("Error sending donation receipt email with invoice:", err);
+      }
+    })();
 
     res.json({ message: "Payment verified successfully", donation });
   } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// GET /api/donations/:donationId/invoice — download invoice
+export const downloadInvoice = async (req, res) => {
+  try {
+    const { donationId } = req.params;
+    const donation = await Donation.findById(donationId);
+
+    if (!donation || donation.paymentStatus !== "completed") {
+      return res.status(404).json({ message: "Donation not found" });
+    }
+
+    // Check if the requester is the donor or an admin
+    if (donation.donorId.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Unauthorized access to invoice" });
+    }
+
+    const donor = await User.findById(donation.donorId);
+    const campaign = await Campaign.findById(donation.campaignId);
+
+    if (!donor) {
+      return res.status(404).json({ message: "Donor account not found" });
+    }
+    if (!campaign) {
+      return res.status(404).json({ message: "Campaign not found" });
+    }
+
+    const invoiceBuffer = await generateInvoice(donation, donor, campaign);
+
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename=invoice-${donationId}.pdf`,
+      "Content-Length": invoiceBuffer.length,
+    });
+
+    res.send(invoiceBuffer);
+  } catch (error) {
+    console.error("downloadInvoice error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

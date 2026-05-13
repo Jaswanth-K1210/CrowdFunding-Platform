@@ -53,89 +53,121 @@ function RaiseFund() {
     }
   };
 
-  return (
-    <div className="flex justify-center items-center min-h-[70vh]">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-lg">
-        <h2 className="text-2xl font-bold text-center mb-6">Create Campaign</h2>
+return (
+    <div className="flex justify-center bg-gray-50 min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-xl">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Start Your Campaign</h2>
+          <p className="text-gray-600">Share your story and raise funds for what matters</p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            name="title"
-            placeholder="Campaign Title"
-            value={campaign.title}
-            onChange={handleChange}
-            required
-            className="w-full border p-2 rounded"
-          />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Campaign Title</label>
+            <input
+              type="text"
+              name="title"
+              placeholder="e.g. Help rebuild after flood"
+              value={campaign.title}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+            />
+          </div>
 
-          <textarea
-            name="description"
-            placeholder="Campaign Description / Story"
-            value={campaign.description}
-            onChange={handleChange}
-            required
-            rows={4}
-            className="w-full border p-2 rounded"
-          />
+          {/* Category */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+            <select
+              name="category"
+              value={campaign.category}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+            >
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          <select
-            name="category"
-            value={campaign.category}
-            onChange={handleChange}
-            required
-            className="w-full border p-2 rounded"
-          >
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
-              </option>
-            ))}
-          </select>
+          {/* Goal Amount */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Funding Goal (INR)</label>
+            <input
+              type="number"
+              name="goalAmount"
+              placeholder="50000"
+              value={campaign.goalAmount}
+              onChange={handleChange}
+              required
+              min="1"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+            />
+          </div>
 
-          <input
-            type="number"
-            name="goalAmount"
-            placeholder="Goal Amount (INR)"
-            value={campaign.goalAmount}
-            onChange={handleChange}
-            required
-            className="w-full border p-2 rounded"
-          />
+          {/* Images */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Campaign Image URL</label>
+            <input
+              type="text"
+              name="images"
+              placeholder="https://example.com/image.jpg"
+              value={campaign.images}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+            />
+          </div>
 
-          <input
-            type="text"
-            name="location"
-            placeholder="Location"
-            value={campaign.location}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          />
+          {/* Location */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+            <input
+              type="text"
+              name="location"
+              placeholder="e.g. Mumbai, India"
+              value={campaign.location}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+            />
+          </div>
 
-          <input
-            type="text"
-            name="images"
-            placeholder="Image URL"
-            value={campaign.images}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          />
+          {/* Deadline */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Campaign Deadline</label>
+            <input
+              type="date"
+              name="deadline"
+              value={campaign.deadline}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+            />
+          </div>
 
-          <input
-            type="date"
-            name="deadline"
-            value={campaign.deadline}
-            onChange={handleChange}
-            required
-            className="w-full border p-2 rounded"
-          />
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Tell your story</label>
+            <textarea
+              name="description"
+              placeholder="Share your campaign story, why you need funding, and how donations will help..."
+              value={campaign.description}
+              onChange={handleChange}
+              required
+              rows={6}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all resize-vertical"
+            />
+          </div>
 
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700 disabled:bg-gray-400"
+            className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl disabled:from-gray-400 disabled:to-gray-500 disabled:shadow-none transition-all duration-300 text-lg"
           >
-            {submitting ? "Creating..." : "Create Campaign"}
+            {submitting ? "Creating Campaign..." : "Launch Campaign"}
           </button>
         </form>
       </div>

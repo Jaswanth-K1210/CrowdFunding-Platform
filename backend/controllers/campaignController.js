@@ -152,7 +152,7 @@ export const updateCampaign = async (req, res) => {
     const updated = await Campaign.findByIdAndUpdate(
       req.params.id,
       { title, description, category, goalAmount, images, documents, location, deadline },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     res.json(updated);

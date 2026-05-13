@@ -74,7 +74,7 @@ function Register() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 disabled:bg-gray-400"
+            className="w-full bg-emerald-600 text-white p-2 rounded-lg hover:bg-emerald-700 disabled:bg-gray-400"
           >
             {submitting ? "Creating..." : "Register"}
           </button>
@@ -82,7 +82,7 @@ function Register() {
 
         <p className="text-sm text-center mt-4">
           Already have an account?{" "}
-          <span className="text-blue-600 cursor-pointer" onClick={() => navigate("/login")}>
+          <span className="text-emerald-600 cursor-pointer" onClick={() => navigate("/login")}>
             Login
           </span>
         </p>

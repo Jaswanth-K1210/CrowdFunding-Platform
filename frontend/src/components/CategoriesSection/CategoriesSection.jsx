@@ -4,14 +4,14 @@ import { FaHeartbeat, FaGraduationCap, FaHandHoldingHeart, FaDog, FaSeedling, Fa
 
 function CategoriesSection() {
   const categories = [
-    { name: "Medical", value: "medical", icon: <FaHeartbeat size={30} />, color: "bg-red-100 text-red-600" },
-    { name: "Education", value: "education", icon: <FaGraduationCap size={30} />, color: "bg-blue-100 text-blue-600" },
-    { name: "NGO", value: "ngo", icon: <FaHandHoldingHeart size={30} />, color: "bg-pink-100 text-pink-600" },
-    { name: "Animals", value: "animals", icon: <FaDog size={30} />, color: "bg-yellow-100 text-yellow-600" },
-    { name: "Community", value: "community", icon: <FaUsers size={30} />, color: "bg-green-100 text-green-600" },
-    { name: "Emergency", value: "emergency", icon: <FaExclamationTriangle size={30} />, color: "bg-orange-100 text-orange-600" },
-    { name: "Business", value: "business", icon: <FaSeedling size={30} />, color: "bg-teal-100 text-teal-600" },
-    { name: "Technology", value: "technology", icon: <FaLightbulb size={30} />, color: "bg-purple-100 text-purple-600" },
+    { name: "Medical", value: "medical", icon: <FaHeartbeat size={30} />, color: "bg-emerald-100 text-emerald-700" },
+    { name: "Education", value: "education", icon: <FaGraduationCap size={30} />, color: "bg-teal-100 text-teal-700" },
+    { name: "NGO", value: "ngo", icon: <FaHandHoldingHeart size={30} />, color: "bg-emerald-50 text-emerald-600" },
+    { name: "Animals", value: "animals", icon: <FaDog size={30} />, color: "bg-teal-50 text-teal-600" },
+    { name: "Community", value: "community", icon: <FaUsers size={30} />, color: "bg-emerald-200 text-emerald-800" },
+    { name: "Emergency", value: "emergency", icon: <FaExclamationTriangle size={30} />, color: "bg-teal-200 text-teal-800" },
+    { name: "Business", value: "business", icon: <FaSeedling size={30} />, color: "bg-emerald-100 text-emerald-600" },
+    { name: "Technology", value: "technology", icon: <FaLightbulb size={30} />, color: "bg-teal-100 text-teal-600" },
   ];
 
   return (

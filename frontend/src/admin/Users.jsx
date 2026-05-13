@@ -1,23 +1,14 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { adminService } from "../services/adminService";
-import { useAuth } from "../store/authStore";
-import AdminSidebar from "../components/admin/Sidebar";
 
 function Users() {
-  const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== "admin")) {
-      navigate("/login");
-      return;
-    }
-    if (user?.role === "admin") fetchUsers();
-  }, [user, authLoading]);
+    fetchUsers();
+  }, []);
 
   const fetchUsers = async () => {
     try {
@@ -67,11 +58,11 @@ function Users() {
                 placeholder="Search users by name or email..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               />
               <button
                 type="submit"
-                className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
               >
                 Search
               </button>
@@ -97,7 +88,7 @@ function Users() {
                     <tr key={user._id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-8 py-5">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
+                          <div className="w-10 h-10 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full flex items-center justify-center">
                             <span className="font-bold text-xs text-white">
                               {user.name?.charAt(0)?.toUpperCase()}
                             </span>
@@ -110,7 +101,7 @@ function Users() {
                       <td className="px-8 py-5 text-sm text-gray-600">{user.email}</td>
                       <td className="px-8 py-5">
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                          user.role === 'admin' ? 'bg-teal-100 text-teal-800' :
                           user.role === 'verified' ? 'bg-emerald-100 text-emerald-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
@@ -127,7 +118,7 @@ function Users() {
                       </td>
                       <td className="px-8 py-5">
                         <div className="flex gap-2">
-                          <button className="px-4 py-1.5 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition">
+                          <button className="px-4 py-1.5 bg-emerald-500 text-white text-xs rounded-lg hover:bg-emerald-600 transition">
                             Edit
                           </button>
                           <button className="px-4 py-1.5 bg-gray-500 text-white text-xs rounded-lg hover:bg-gray-600 transition">

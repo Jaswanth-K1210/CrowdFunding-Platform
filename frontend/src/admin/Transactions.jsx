@@ -1,22 +1,14 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { adminService } from "../services/adminService";
-import { useAuth } from "../store/authStore";
 import { formatCurrency } from "../utils/formatCurrency";
 
 function Transactions() {
-  const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== "admin")) {
-      navigate("/login");
-      return;
-    }
-    if (user?.role === "admin") fetchTransactions();
-  }, [user, authLoading]);
+    fetchTransactions();
+  }, []);
 
   const fetchTransactions = async () => {
     try {
@@ -29,10 +21,10 @@ function Transactions() {
     }
   };
 
-  if (authLoading || loading) return <p className="text-center py-10">Loading...</p>;
+  if (loading) return <p className="text-center py-10">Loading...</p>;
 
   return (
-    <div className="space-y-6 pt-24 px-8">
+    <div className="space-y-6">
       <h1 className="text-3xl font-bold">Transactions</h1>
 
       {transactions.length === 0 ? (

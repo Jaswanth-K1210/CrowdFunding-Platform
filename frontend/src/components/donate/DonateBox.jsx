@@ -49,7 +49,7 @@ function DonateBox({ goal, raised, onDonate }) {
       {/* Share Link */}
       <div className="mt-4 text-center">
         <button
-          className="text-blue-600 text-sm hover:underline"
+          className="text-emerald-600 text-sm hover:underline"
           onClick={() => navigator.clipboard.writeText(window.location.href)}
         >
           Share Campaign

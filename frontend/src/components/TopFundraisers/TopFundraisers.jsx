@@ -39,7 +39,7 @@ function TopFundraisers() {
               <div className="p-4 text-center">
                 <h3 className="text-lg font-semibold">{campaign.title}</h3>
                 <p className="text-sm text-gray-500">By {campaign.creatorId?.name}</p>
-                <p className="text-green-600 font-bold mt-2">
+                <p className="text-emerald-600 font-bold mt-2">
                   {formatCurrency(campaign.raisedAmount)} Raised
                 </p>
               </div>

@@ -69,11 +69,11 @@ function DonatePage() {
           placeholder="Search campaigns..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border border-gray-300 p-3 flex-1 max-w-md rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 p-3 flex-1 max-w-md rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
         <button
           type="submit"
-          className="bg-blue-600 hover:bg-blue-700 transition text-white px-5 rounded-xl shadow"
+          className="bg-emerald-600 hover:bg-emerald-700 transition text-white px-5 rounded-xl shadow"
         >
           Search
         </button>
@@ -84,7 +84,7 @@ function DonatePage() {
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="border border-gray-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
           <option value="">All Categories</option>
           {categories.map((cat) => (
@@ -97,7 +97,7 @@ function DonatePage() {
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value)}
-          className="border border-gray-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
           <option value="">Sort By</option>
           <option value="most-funded">Most Funded</option>

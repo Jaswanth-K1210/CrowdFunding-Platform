@@ -13,7 +13,7 @@ function Button({
       onClick={onClick}
       disabled={disabled}
       className={`px-5 py-2 rounded-lg font-medium transition 
-      bg-blue-600 text-white hover:bg-blue-700 
+      bg-emerald-600 text-white hover:bg-emerald-700 
       disabled:bg-gray-400 disabled:cursor-not-allowed 
       ${className}`}
     >

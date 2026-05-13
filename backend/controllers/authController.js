@@ -105,7 +105,7 @@ export const updateProfile = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { name, phone, avatar, location },
-      { new: true }
+      { returnDocument: 'after' }
     ).select("-passwordHash");
 
     res.json(user);

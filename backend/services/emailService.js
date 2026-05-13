@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import "dotenv/config";
 
 const isEmailConfigured =
   process.env.EMAIL_USER &&
@@ -24,17 +25,36 @@ const sendMail = async (mailOptions) => {
   await transporter.sendMail(mailOptions);
 };
 
-export const sendDonationReceipt = async (toEmail, donorName, amount, campaignTitle) => {
-  await sendMail({
+export const sendDonationReceipt = async (toEmail, donorName, amount, campaignTitle, campaignId, attachment = null) => {
+  const mailOptions = {
     from: process.env.EMAIL_USER,
     to: toEmail,
     subject: "Donation Receipt",
     html: `
-      <h2>Thank you for your donation, ${donorName}!</h2>
-      <p>You donated <strong>₹${amount}</strong> to <strong>${campaignTitle}</strong>.</p>
-      <p>Your support makes a difference.</p>
+      <h2>Thank you for your generous donation, ${donorName}! ❤️ 🙌</h2>
+      <p>We've successfully received your contribution of <strong>Rs. ${amount.toLocaleString("en-IN")}</strong> to the campaign <strong>"${campaignTitle}"</strong>.</p>
+      <p>Your support makes a huge difference. Please find your official donation receipt attached to this email.</p>
+      
+      <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="margin-top: 0; color: #1f2937;">Help us reach our goal faster! 🚀</h3>
+        <p style="color: #4b5563; margin-bottom: 15px;">You can multiply your impact by sharing this campaign with your friends, family, and network so that others might also donate. Every share counts!</p>
+        <a href="http://localhost:5173/campaign/${campaignId}" style="background-color: #10b981; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View & Share Campaign</a>
+      </div>
+
+      <p>With immense gratitude,<br/>The CrowdFunding Team</p>
     `,
-  });
+  };
+
+  if (attachment) {
+    mailOptions.attachments = [
+      {
+        filename: `invoice-${Date.now()}.pdf`,
+        content: attachment,
+      },
+    ];
+  }
+
+  await sendMail(mailOptions);
 };
 
 export const sendCampaignApproved = async (toEmail, campaignTitle) => {

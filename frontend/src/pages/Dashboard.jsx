@@ -45,17 +45,17 @@ function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white shadow rounded-lg p-4 text-center">
           <p className="text-gray-500 text-sm">Campaigns Created</p>
-          <p className="text-2xl font-bold text-blue-600">{myCampaigns.length}</p>
+          <p className="text-2xl font-bold text-emerald-600">{myCampaigns.length}</p>
         </div>
         <div className="bg-white shadow rounded-lg p-4 text-center">
           <p className="text-gray-500 text-sm">Total Donated</p>
-          <p className="text-2xl font-bold text-green-600">
+          <p className="text-2xl font-bold text-emerald-500">
             {formatCurrency(myDonations.reduce((sum, d) => sum + d.amount, 0))}
           </p>
         </div>
         <div className="bg-white shadow rounded-lg p-4 text-center">
           <p className="text-gray-500 text-sm">Total Raised</p>
-          <p className="text-2xl font-bold text-purple-600">
+          <p className="text-2xl font-bold text-teal-600">
             {formatCurrency(myCampaigns.reduce((sum, c) => sum + (c.raisedAmount || 0), 0))}
           </p>
         </div>
@@ -65,7 +65,7 @@ function Dashboard() {
       <section>
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-xl font-semibold">My Campaigns</h2>
-          <Link to="/raise" className="text-blue-600 hover:underline text-sm">
+          <Link to="/raise" className="text-emerald-600 hover:underline text-sm">
             + Create New
           </Link>
         </div>
@@ -88,7 +88,7 @@ function Dashboard() {
                     </p>
                   </div>
                   <span className={`text-xs px-2 py-1 rounded ${
-                    campaign.status === "approved" ? "bg-green-100 text-green-700" :
+                    campaign.status === "approved" ? "bg-emerald-100 text-emerald-700" :
                     campaign.status === "pending" ? "bg-yellow-100 text-yellow-700" :
                     campaign.status === "rejected" ? "bg-red-100 text-red-700" :
                     "bg-gray-100 text-gray-700"

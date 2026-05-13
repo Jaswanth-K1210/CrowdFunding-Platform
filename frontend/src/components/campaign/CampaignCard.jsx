@@ -28,7 +28,7 @@ function CampaignCard({ campaign }) {
       <div className="p-6">
         {/* Category badge & creator */}
         <div className="flex items-center justify-between mb-3">
-          <span className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold rounded-full shadow-lg">
+          <span className="px-3 py-1 bg-gradient-to-r from-teal-500 to-emerald-500 text-white text-xs font-semibold rounded-full shadow-lg">
             {campaign.category}
           </span>
           <div className="flex items-center gap-2">
@@ -54,7 +54,7 @@ function CampaignCard({ campaign }) {
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-gradient-to-r from-emerald-500 to-blue-500 h-2 rounded-full shadow-md transition-all duration-700" 
+              className="bg-gradient-to-r from-emerald-500 to-teal-500 h-2 rounded-full shadow-md transition-all duration-700" 
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -69,7 +69,7 @@ function CampaignCard({ campaign }) {
         {/* Donate CTA */}
         <Link
           to={`/campaign/${campaign._id}`}
-          className="block w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 text-sm uppercase tracking-wide text-center"
+          className="block w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 text-sm uppercase tracking-wide text-center"
         >
           Donate Now
         </Link>

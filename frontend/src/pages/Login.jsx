@@ -62,7 +62,7 @@ function Login() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+            className="w-full bg-emerald-600 text-white p-2 rounded-lg hover:bg-emerald-700 disabled:bg-gray-400"
           >
             {submitting ? "Logging in..." : "Login"}
           </button>
@@ -70,7 +70,7 @@ function Login() {
 
         <p className="text-sm text-center mt-4">
           Don't have an account?{" "}
-          <span className="text-blue-600 cursor-pointer" onClick={() => navigate("/register")}>
+          <span className="text-emerald-600 cursor-pointer" onClick={() => navigate("/register")}>
             Register
           </span>
         </p>

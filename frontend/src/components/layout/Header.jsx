@@ -37,6 +37,7 @@ function Header() {
         <nav className="hidden md:flex items-center gap-1">
           <NavLink to="/" scrolled={scrolled}>Home</NavLink>
           <NavLink to="/donate" scrolled={scrolled}>Donate</NavLink>
+          <NavLink to="/trust-us" scrolled={scrolled}>Why Trust Us</NavLink>
           <Link
             to="/raise"
             className="ml-1 bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-full text-sm font-semibold transition-all"
@@ -48,11 +49,12 @@ function Header() {
         {/* Right Side */}
         <div className="hidden md:flex items-center gap-2">
           {user ? (
-            <>
-              {user.role === "admin" && (
-                <NavLink to="/admin" scrolled={scrolled}>Admin</NavLink>
-              )}
-              <NavLink to="/dashboard" scrolled={scrolled}>Dashboard</NavLink>
+            <><NavLink
+  to={user.role === "admin" ? "/admin" : "/dashboard"}
+  scrolled={scrolled}
+>
+  Dashboard
+</NavLink>
               <Link
                 to="/profile"
                 className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-full text-sm font-semibold transition-all"
@@ -87,6 +89,7 @@ function Header() {
         <div className="md:hidden mt-2 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl p-4 space-y-2">
           <MobileLink to="/" onClick={() => setMenuOpen(false)}>Home</MobileLink>
           <MobileLink to="/donate" onClick={() => setMenuOpen(false)}>Donate</MobileLink>
+          <MobileLink to="/trust-us" onClick={() => setMenuOpen(false)}>Why Trust Us</MobileLink>
           <MobileLink to="/raise" onClick={() => setMenuOpen(false)}>Raise Fund</MobileLink>
           {user ? (
             <>

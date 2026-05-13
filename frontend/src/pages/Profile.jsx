@@ -55,7 +55,7 @@ function Profile() {
 
         <button
           onClick={handleLogout}
-          className="w-full mt-6 bg-red-500 text-white p-2 rounded-lg hover:bg-red-600"
+          className="w-full mt-6 bg-teal-900 text-white p-2 rounded-lg hover:bg-teal-800"
         >
           Logout
         </button>

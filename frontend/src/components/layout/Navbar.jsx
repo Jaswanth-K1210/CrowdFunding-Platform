@@ -11,7 +11,7 @@ function Navbar() {
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
 
         {/* Logo */}
-        <Link to="/" className="text-xl font-bold text-blue-600">
+        <Link to="/" className="text-xl font-bold text-emerald-600">
           CrowdFund
         </Link>
 
@@ -20,23 +20,30 @@ function Navbar() {
 
           <Link
             to="/"
-            className="text-gray-700 hover:text-blue-600"
+            className="text-gray-700 hover:text-emerald-600"
           >
             Home
           </Link>
 
           <Link
             to="/donate"
-            className="text-gray-700 hover:text-blue-600"
+            className="text-gray-700 hover:text-emerald-600"
           >
             Donate
           </Link>
 
           <Link
             to="/raise"
-            className="text-gray-700 hover:text-blue-600"
+            className="text-gray-700 hover:text-emerald-600"
           >
             Raise Fund
+          </Link>
+
+          <Link
+            to="/trust-us"
+            className="text-gray-700 hover:text-emerald-600"
+          >
+            Why Trust Us
           </Link>
 
         </div>
