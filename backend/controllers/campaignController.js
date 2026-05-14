@@ -1,6 +1,7 @@
 import Campaign from "../models/Campaign.js";
 import Comment from "../models/Comment.js";
 import User from "../models/User.js";
+import { uploadBuffer } from "../utils/cloudinaryUpload.js";
 
 // GET /api/campaigns — all campaigns with status visible
 export const getCampaigns = async (req, res) => {
@@ -98,37 +99,80 @@ export const getCampaignById = async (req, res) => {
 // POST /api/campaigns — create (auth required)
 export const createCampaign = async (req, res) => {
   try {
-    const {
-      title,
-      description,
-      category,
-      goalAmount,
-      images,
-      documents,
-      location,
-      deadline,
-    } = req.body;
+    console.log("--- CREATE CAMPAIGN DEBUG ---");
+    console.log("User:", req.user?._id);
+    const { title, description, category, goalAmount, location, deadline } = req.body;
+    console.log("Body:", { title, description: description?.substring(0, 50), category, goalAmount, location, deadline });
 
-    const campaign = await Campaign.create({
-      creatorId: req.user._id,
-      title,
-      description,
-      category,
-      goalAmount,
-      images,
-      documents,
-      location,
-      deadline,
-      status: "pending",
-    });
+    const imageFiles = req.files?.images || [];
+    const documentFiles = req.files?.documents || [];
+    console.log("Files - images:", imageFiles.length, "documents:", documentFiles.length);
 
-    // Increment user's campaignsCreated stat
-    await User.findByIdAndUpdate(req.user._id, {
-      $inc: { "stats.campaignsCreated": 1 },
-    });
+    // --- Step 1: Upload images to Cloudinary ---
+    let imageUrls = [];
+    if (imageFiles.length) {
+      try {
+        console.log("Uploading images to Cloudinary...");
+        imageUrls = await Promise.all(
+          imageFiles.map((f) => uploadBuffer(f.buffer, "crowdfunding/images", "image"))
+        );
+        console.log("Image upload done:", imageUrls);
+      } catch (uploadErr) {
+        console.error("CLOUDINARY IMAGE UPLOAD ERROR:", uploadErr);
+        return res.status(500).json({ message: "Image upload failed", error: uploadErr.message });
+      }
+    }
+
+    // --- Step 2: Upload documents to Cloudinary ---
+    let documentUrls = [];
+    if (documentFiles.length) {
+      try {
+        console.log("Uploading documents to Cloudinary...");
+        documentUrls = await Promise.all(
+          documentFiles.map((f) => uploadBuffer(f.buffer, "crowdfunding/documents", "raw"))
+        );
+        console.log("Document upload done:", documentUrls);
+      } catch (uploadErr) {
+        console.error("CLOUDINARY DOCUMENT UPLOAD ERROR:", uploadErr);
+        return res.status(500).json({ message: "Document upload failed", error: uploadErr.message });
+      }
+    }
+
+    // --- Step 3: Save campaign to MongoDB ---
+    let campaign;
+    try {
+      console.log("Creating campaign in DB...");
+      campaign = await Campaign.create({
+        creatorId: req.user._id,
+        title,
+        description,
+        category,
+        goalAmount,
+        images: imageUrls,
+        documents: documentUrls,
+        location,
+        deadline,
+        status: "pending",
+      });
+      console.log("Campaign created:", campaign._id);
+    } catch (dbErr) {
+      console.error("MONGODB CREATE ERROR:", dbErr);
+      return res.status(500).json({ message: "Failed to save campaign", error: dbErr.message });
+    }
+
+    // --- Step 4: Update user stats ---
+    try {
+      await User.findByIdAndUpdate(req.user._id, {
+        $inc: { "stats.campaignsCreated": 1 },
+      });
+    } catch (statsErr) {
+      console.error("USER STATS UPDATE ERROR:", statsErr);
+      // Non-critical — campaign was created, just log it
+    }
 
     res.status(201).json(campaign);
   } catch (error) {
+    console.error("CREATE CAMPAIGN UNEXPECTED ERROR:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

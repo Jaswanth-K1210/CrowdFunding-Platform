@@ -1,13 +1,14 @@
 import React from 'react';
-import { Link } from "react-router-dom";
+import { Link,useNavigate } from "react-router-dom";
 import { formatCurrency } from "../../utils/formatCurrency";
 
 function CampaignCard({ campaign }) {
+  const navigate = useNavigate();
   const progress = Math.min((campaign.raisedAmount / campaign.goalAmount) * 100, 100);
   const creator = campaign.creatorId?.name || 'Unknown';
 
   return (
-    <div className="group bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden h-full">
+    <div className="group bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden h-full" onClick={() => navigate(`/campaign/${campaign._id}`)}>
       <div className="relative">
         <img 
           src={campaign.images?.[0] || "https://placehold.co/400x250"} 

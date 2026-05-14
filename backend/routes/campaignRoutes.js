@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import {
   getCampaigns,
   getTopCampaigns,
@@ -12,6 +13,8 @@ import {
 } from "../controllers/campaignController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
+const upload = multer({ storage: multer.memoryStorage() });
+
 const router = express.Router();
 
 // Public routes
@@ -21,7 +24,10 @@ router.get("/", getCampaigns);
 router.get("/:id", getCampaignById);
 
 // Protected routes
-router.post("/", authMiddleware, createCampaign);
+router.post("/", authMiddleware, upload.fields([
+  { name: "images", maxCount: 5 },
+  { name: "documents", maxCount: 5 },
+]), createCampaign);
 router.put("/:id", authMiddleware, updateCampaign);
 router.delete("/:id", authMiddleware, deleteCampaign);
 router.get("/my/list", authMiddleware, getMyCampaigns);

@@ -1,6 +1,6 @@
+import "dotenv/config";
 import express from "express";
 import mongoose from "mongoose";
-import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
@@ -15,8 +15,6 @@ import "./models/Campaign.js";
 import "./models/Donation.js";
 import "./models/Comment.js";
 import bcrypt from "bcryptjs";
-
-dotenv.config();
 
 const app = express();
 

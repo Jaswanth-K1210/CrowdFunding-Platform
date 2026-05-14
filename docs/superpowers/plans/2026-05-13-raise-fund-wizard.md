@@ -1,3 +1,239 @@
+# Raise Fund Multi-Step Wizard Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Replace the single flat campaign creation form with a 5-step wizard that supports local image/document uploads via Cloudinary.
+
+**Architecture:** Single-page React wizard controlled by `currentStep` state. Files held as `File` objects in state until final submit, then uploaded to Cloudinary via backend (multer → cloudinary SDK), URLs saved to Campaign model. No route changes needed.
+
+**Tech Stack:** React, Tailwind CSS, multer (backend file handling), cloudinary npm SDK (backend upload), axios multipart/form-data
+
+---
+
+## File Map
+
+| Action | File | Purpose |
+|--------|------|---------|
+| Modify | `backend/package.json` | Add multer + cloudinary deps |
+| Create | `backend/utils/cloudinaryUpload.js` | Cloudinary config + upload helper |
+| Modify | `backend/controllers/campaignController.js` | Handle file buffers, upload, save URLs |
+| Modify | `backend/routes/campaignRoutes.js` | Add multer middleware to POST /campaigns |
+| Modify | `frontend/src/services/campaignService.js` | Send multipart/form-data |
+| Modify | `frontend/src/pages/RaiseFund.jsx` | Full rewrite as 5-step wizard |
+
+---
+
+### Task 1: Install backend dependencies
+
+**Files:**
+- Modify: `backend/package.json`
+
+- [ ] **Step 1: Install multer and cloudinary**
+
+```bash
+cd /Users/apple/Documents/Projects/crowdFunding/backend
+npm install multer cloudinary
+```
+
+Expected: Both packages appear in `node_modules`, `package.json` updated.
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add backend/package.json backend/package-lock.json
+git commit -m "chore: add multer and cloudinary dependencies"
+```
+
+---
+
+### Task 2: Create Cloudinary upload utility
+
+**Files:**
+- Create: `backend/utils/cloudinaryUpload.js`
+
+- [ ] **Step 1: Create the utility**
+
+Create `backend/utils/cloudinaryUpload.js`:
+
+```js
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+export const uploadBuffer = (buffer, folder, resourceType = "auto") =>
+  new Promise((resolve, reject) => {
+    cloudinary.uploader
+      .upload_stream({ folder, resource_type: resourceType }, (error, result) => {
+        if (error) return reject(error);
+        resolve(result.secure_url);
+      })
+      .end(buffer);
+  });
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add backend/utils/cloudinaryUpload.js
+git commit -m "feat: add cloudinary upload utility"
+```
+
+---
+
+### Task 3: Add multer middleware to campaign route
+
+**Files:**
+- Modify: `backend/routes/campaignRoutes.js`
+
+- [ ] **Step 1: Read the current routes file**
+
+Read `backend/routes/campaignRoutes.js` to see the current imports and route definitions.
+
+- [ ] **Step 2: Add multer import and middleware**
+
+Add multer import at the top of `backend/routes/campaignRoutes.js`:
+
+```js
+import multer from "multer";
+const upload = multer({ storage: multer.memoryStorage() });
+```
+
+Update the POST `/` route to use multer:
+
+```js
+// Before:
+router.post("/", protect, createCampaign);
+
+// After:
+router.post("/", protect, upload.fields([
+  { name: "images", maxCount: 5 },
+  { name: "documents", maxCount: 5 },
+]), createCampaign);
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add backend/routes/campaignRoutes.js
+git commit -m "feat: add multer file upload middleware to campaign create route"
+```
+
+---
+
+### Task 4: Update campaignController to handle file uploads
+
+**Files:**
+- Modify: `backend/controllers/campaignController.js`
+
+- [ ] **Step 1: Add cloudinary import**
+
+At the top of `backend/controllers/campaignController.js`, add:
+
+```js
+import { uploadBuffer } from "../utils/cloudinaryUpload.js";
+```
+
+- [ ] **Step 2: Replace createCampaign with file-upload-aware version**
+
+Replace the `createCampaign` function body:
+
+```js
+export const createCampaign = async (req, res) => {
+  try {
+    const { title, description, category, goalAmount, location, deadline } = req.body;
+
+    const imageFiles = req.files?.images || [];
+    const documentFiles = req.files?.documents || [];
+
+    const imageUrls = await Promise.all(
+      imageFiles.map((f) => uploadBuffer(f.buffer, "crowdfunding/images", "image"))
+    );
+    const documentUrls = await Promise.all(
+      documentFiles.map((f) => uploadBuffer(f.buffer, "crowdfunding/documents", "raw"))
+    );
+
+    const campaign = await Campaign.create({
+      creatorId: req.user._id,
+      title,
+      description,
+      category,
+      goalAmount,
+      images: imageUrls,
+      documents: documentUrls,
+      location,
+      deadline,
+      status: "pending",
+    });
+
+    await User.findByIdAndUpdate(req.user._id, {
+      $inc: { "stats.campaignsCreated": 1 },
+    });
+
+    res.status(201).json(campaign);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add backend/controllers/campaignController.js
+git commit -m "feat: upload images and documents to cloudinary on campaign creation"
+```
+
+---
+
+### Task 5: Update frontend campaignService to send multipart/form-data
+
+**Files:**
+- Modify: `frontend/src/services/campaignService.js`
+
+- [ ] **Step 1: Update create method**
+
+Replace the `create` method in `frontend/src/services/campaignService.js`:
+
+```js
+create: (data) => {
+  const form = new FormData();
+  form.append("title", data.title);
+  form.append("description", data.description);
+  form.append("category", data.category);
+  form.append("goalAmount", data.goalAmount);
+  form.append("location", data.location || "");
+  form.append("deadline", data.deadline);
+  (data.images || []).forEach((file) => form.append("images", file));
+  (data.documents || []).forEach((file) => form.append("documents", file));
+  return api.post("/campaigns", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+},
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add frontend/src/services/campaignService.js
+git commit -m "feat: send campaign creation as multipart/form-data"
+```
+
+---
+
+### Task 6: Rewrite RaiseFund.jsx as 5-step wizard
+
+**Files:**
+- Modify: `frontend/src/pages/RaiseFund.jsx`
+
+- [ ] **Step 1: Full rewrite**
+
+Replace the entire contents of `frontend/src/pages/RaiseFund.jsx` with:
+
+```jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -138,7 +374,7 @@ function RaiseFund() {
           <div className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Campaign Title *</label>
-              <input name="title" value={basics.title} onChange={handleBasicsChange}
+              <input name="title" value={basics.title} onChange={handleBasicsChange} required
                 placeholder="e.g. Help rebuild after flood" className={inputCls} />
             </div>
             <div>
@@ -187,7 +423,7 @@ function RaiseFund() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Campaign Images</label>
             <p className="text-sm text-gray-400 mb-3">Upload up to 5 images from your device (JPG, PNG, etc.)</p>
-            <label className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-emerald-300 rounded-xl cursor-pointer bg-emerald-50 hover:bg-emerald-100 transition-colors ${images.length >= 5 ? "opacity-50 cursor-not-allowed" : ""}`}>
+            <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-emerald-300 rounded-xl cursor-pointer bg-emerald-50 hover:bg-emerald-100 transition-colors">
               <span className="text-3xl mb-1">🖼️</span>
               <span className="text-sm font-medium text-emerald-600">Click to select images</span>
               <span className="text-xs text-gray-400 mt-1">{images.length}/5 selected</span>
@@ -202,7 +438,7 @@ function RaiseFund() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Supporting Documents</label>
             <p className="text-sm text-gray-400 mb-3">Upload medical reports, ID proof, or any supporting files (PDF, DOC, etc.)</p>
-            <label className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-blue-300 rounded-xl cursor-pointer bg-blue-50 hover:bg-blue-100 transition-colors ${documents.length >= 5 ? "opacity-50 cursor-not-allowed" : ""}`}>
+            <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-blue-300 rounded-xl cursor-pointer bg-blue-50 hover:bg-blue-100 transition-colors">
               <span className="text-3xl mb-1">📁</span>
               <span className="text-sm font-medium text-blue-600">Click to select documents</span>
               <span className="text-xs text-gray-400 mt-1">{documents.length}/5 selected</span>
@@ -220,11 +456,11 @@ function RaiseFund() {
                 <h3 className="font-semibold text-gray-700">Basics</h3>
                 <button onClick={() => setStep(1)} className="text-xs text-emerald-600 hover:underline">Edit</button>
               </div>
-              <p><span className="text-gray-500 text-sm">Title: </span><span className="font-medium">{basics.title}</span></p>
-              <p><span className="text-gray-500 text-sm">Category: </span><span className="font-medium capitalize">{basics.category}</span></p>
-              <p><span className="text-gray-500 text-sm">Goal: </span><span className="font-medium">₹{Number(basics.goalAmount).toLocaleString("en-IN")}</span></p>
-              <p><span className="text-gray-500 text-sm">Deadline: </span><span className="font-medium">{basics.deadline}</span></p>
-              {basics.location && <p><span className="text-gray-500 text-sm">Location: </span><span className="font-medium">{basics.location}</span></p>}
+              <p><span className="text-gray-500 text-sm">Title:</span> <span className="font-medium">{basics.title}</span></p>
+              <p><span className="text-gray-500 text-sm">Category:</span> <span className="font-medium capitalize">{basics.category}</span></p>
+              <p><span className="text-gray-500 text-sm">Goal:</span> <span className="font-medium">₹{Number(basics.goalAmount).toLocaleString("en-IN")}</span></p>
+              <p><span className="text-gray-500 text-sm">Deadline:</span> <span className="font-medium">{basics.deadline}</span></p>
+              {basics.location && <p><span className="text-gray-500 text-sm">Location:</span> <span className="font-medium">{basics.location}</span></p>}
             </div>
 
             <div className="bg-gray-50 rounded-xl p-4">
@@ -243,7 +479,7 @@ function RaiseFund() {
               {images.length ? (
                 <div className="flex gap-2 flex-wrap">
                   {images.map((f, i) => (
-                    <img key={i} src={URL.createObjectURL(f)} alt="" className="w-16 h-16 rounded-lg object-cover border border-gray-200" />
+                    <img key={i} src={URL.createObjectURL(f)} className="w-16 h-16 rounded-lg object-cover border border-gray-200" />
                   ))}
                 </div>
               ) : <p className="text-sm text-gray-400 italic">No images added</p>}
@@ -286,7 +522,7 @@ function RaiseFund() {
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="px-8 py-3 rounded-xl bg-linear-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold shadow-lg hover:shadow-xl disabled:from-gray-400 disabled:to-gray-500 transition-all"
+              className="px-8 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold shadow-lg hover:shadow-xl disabled:from-gray-400 disabled:to-gray-500 transition-all"
             >
               {submitting ? "Uploading & Creating..." : "🚀 Launch Campaign"}
             </button>
@@ -298,3 +534,11 @@ function RaiseFund() {
 }
 
 export default RaiseFund;
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add frontend/src/pages/RaiseFund.jsx
+git commit -m "feat: replace flat form with 5-step campaign creation wizard"
+```
