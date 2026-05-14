@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../store/authStore";
 import { FaBars, FaTimes } from "react-icons/fa";
 
+
 function Header() {
   const { user } = useAuth();
+  const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -35,26 +38,37 @@ function Header() {
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-1">
-          <NavLink to="/" scrolled={scrolled}>Home</NavLink>
-          <NavLink to="/donate" scrolled={scrolled}>Donate</NavLink>
-          <NavLink to="/trust-us" scrolled={scrolled}>Why Trust Us</NavLink>
-          <Link
+          <NavLink to="/" scrolled={scrolled} selectedPath={location.pathname}>
+            Home
+          </NavLink>
+          <NavLink to="/donate" scrolled={scrolled} selectedPath={location.pathname}>
+            Donate
+          </NavLink>
+          <NavLink to="/trust-us" scrolled={scrolled} selectedPath={location.pathname}>
+            Why Trust Us
+          </NavLink>
+
+          <NavLink
             to="/raise"
-            className="ml-1 bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-full text-sm font-semibold transition-all"
+            scrolled={scrolled}
+            selectedPath={location.pathname}
           >
             Raise Fund
-          </Link>
+          </NavLink>
         </nav>
+
 
         {/* Right Side */}
         <div className="hidden md:flex items-center gap-2">
           {user ? (
-            <><NavLink
-  to={user.role === "admin" ? "/admin" : "/dashboard"}
-  scrolled={scrolled}
->
-  Dashboard
-</NavLink>
+            <>
+              <NavLink
+                to={user.role === "admin" ? "/admin" : "/dashboard"}
+                scrolled={scrolled}
+                selectedPath={location.pathname}
+              >
+                Dashboard
+              </NavLink>
               <Link
                 to="/profile"
                 className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-full text-sm font-semibold transition-all"
@@ -64,7 +78,9 @@ function Header() {
             </>
           ) : (
             <>
-              <NavLink to="/login" scrolled={scrolled}>Login</NavLink>
+              <NavLink to="/login" scrolled={scrolled} selectedPath={location.pathname}>
+                Login
+              </NavLink>
               <Link
                 to="/register"
                 className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-full text-sm font-semibold transition-all"
@@ -74,6 +90,7 @@ function Header() {
             </>
           )}
         </div>
+
 
         {/* Mobile Menu Button */}
         <button
@@ -87,22 +104,25 @@ function Header() {
       {/* Mobile Menu */}
       {menuOpen && (
         <div className="md:hidden mt-2 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl p-4 space-y-2">
-          <MobileLink to="/" onClick={() => setMenuOpen(false)}>Home</MobileLink>
-          <MobileLink to="/donate" onClick={() => setMenuOpen(false)}>Donate</MobileLink>
-          <MobileLink to="/trust-us" onClick={() => setMenuOpen(false)}>Why Trust Us</MobileLink>
-          <MobileLink to="/raise" onClick={() => setMenuOpen(false)}>Raise Fund</MobileLink>
+          <MobileLink to="/" onClick={() => setMenuOpen(false)} selectedPath={location.pathname}>Home</MobileLink>
+          <MobileLink to="/donate" onClick={() => setMenuOpen(false)} selectedPath={location.pathname}>Donate</MobileLink>
+          <MobileLink to="/trust-us" onClick={() => setMenuOpen(false)} selectedPath={location.pathname}>Why Trust Us</MobileLink>
+          <MobileLink to="/raise" onClick={() => setMenuOpen(false)} selectedPath={location.pathname}>Raise Fund</MobileLink>
+
           {user ? (
             <>
               {user.role === "admin" && (
-                <MobileLink to="/admin" onClick={() => setMenuOpen(false)}>Admin</MobileLink>
+                <MobileLink to="/admin" onClick={() => setMenuOpen(false)} selectedPath={location.pathname}>Admin</MobileLink>
               )}
-              <MobileLink to="/dashboard" onClick={() => setMenuOpen(false)}>Dashboard</MobileLink>
-              <MobileLink to="/profile" onClick={() => setMenuOpen(false)}>{user.name}</MobileLink>
+              <MobileLink to="/dashboard" onClick={() => setMenuOpen(false)} selectedPath={location.pathname}>Dashboard</MobileLink>
+              <MobileLink to="/profile" onClick={() => setMenuOpen(false)} selectedPath={location.pathname}>{user.name}</MobileLink>
+
             </>
           ) : (
             <>
-              <MobileLink to="/login" onClick={() => setMenuOpen(false)}>Login</MobileLink>
-              <MobileLink to="/register" onClick={() => setMenuOpen(false)}>Register</MobileLink>
+              <MobileLink to="/login" onClick={() => setMenuOpen(false)} selectedPath={location.pathname}>Login</MobileLink>
+              <MobileLink to="/register" onClick={() => setMenuOpen(false)} selectedPath={location.pathname}>Register</MobileLink>
+
             </>
           )}
         </div>
@@ -111,14 +131,43 @@ function Header() {
   );
 }
 
-function NavLink({ to, scrolled, children }) {
+function NavLink({ to, scrolled, selectedPath, children }) {
+  const isSelected = selectedPath === to;
+
   return (
     <Link
       to={to}
       className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-        scrolled
-          ? "text-gray-300 hover:text-white hover:bg-white/10"
-          : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+        isSelected
+          ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+
+          : scrolled
+
+            ? "text-gray-300 hover:text-white hover:bg-white/10"
+            : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+      }`}
+
+    >
+      {children}
+    </Link>
+  );
+}
+
+
+function MobileLink({ to, onClick, selectedPath, children }) {
+  const isSelected = selectedPath === to;
+
+  return (
+    <Link
+      to={to}
+      onClick={onClick}
+      className={`block px-4 py-3 rounded-xl font-medium text-sm transition-all ${
+          isSelected
+          ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+          : "text-gray-700 hover:bg-gray-100"
+
+
+
       }`}
     >
       {children}
@@ -126,16 +175,5 @@ function NavLink({ to, scrolled, children }) {
   );
 }
 
-function MobileLink({ to, onClick, children }) {
-  return (
-    <Link
-      to={to}
-      onClick={onClick}
-      className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 font-medium text-sm"
-    >
-      {children}
-    </Link>
-  );
-}
 
 export default Header;
