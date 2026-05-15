@@ -28,7 +28,10 @@ router.post("/", authMiddleware, upload.fields([
   { name: "images", maxCount: 5 },
   { name: "documents", maxCount: 5 },
 ]), createCampaign);
-router.put("/:id", authMiddleware, updateCampaign);
+router.put("/:id", authMiddleware, upload.fields([
+  { name: "images", maxCount: 5 },
+  { name: "documents", maxCount: 5 },
+]), updateCampaign);
 router.delete("/:id", authMiddleware, deleteCampaign);
 router.get("/my/list", authMiddleware, getMyCampaigns);
 router.post("/:id/comments", authMiddleware, addComment);

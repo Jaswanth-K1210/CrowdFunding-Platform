@@ -177,7 +177,7 @@ export const createCampaign = async (req, res) => {
   }
 };
 
-// PUT /api/campaigns/:id — update own campaign
+// PUT /api/campaigns/:id — update own campaign (supports new image/doc uploads)
 export const updateCampaign = async (req, res) => {
   try {
     const campaign = await Campaign.findById(req.params.id);
@@ -190,13 +190,33 @@ export const updateCampaign = async (req, res) => {
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    const { title, description, category, goalAmount, images, documents, location, deadline } =
-      req.body;
+    const { title, description, category, goalAmount, location, deadline } = req.body;
+
+    // existingImages / existingDocuments = URLs the client wants to keep
+    let keepImages = req.body.existingImages || [];
+    let keepDocs   = req.body.existingDocuments || [];
+    if (typeof keepImages === "string") keepImages = [keepImages];
+    if (typeof keepDocs   === "string") keepDocs   = [keepDocs];
+
+    // Upload any new files
+    const newImageFiles = req.files?.images || [];
+    const newDocFiles   = req.files?.documents || [];
+
+    const newImageUrls = newImageFiles.length
+      ? await Promise.all(newImageFiles.map((f) => uploadBuffer(f.buffer, "crowdfunding/images", "image")))
+      : [];
+
+    const newDocUrls = newDocFiles.length
+      ? await Promise.all(newDocFiles.map((f) => uploadBuffer(f.buffer, "crowdfunding/documents", "raw")))
+      : [];
+
+    const finalImages    = [...keepImages, ...newImageUrls];
+    const finalDocuments = [...keepDocs,   ...newDocUrls];
 
     const updated = await Campaign.findByIdAndUpdate(
       req.params.id,
-      { title, description, category, goalAmount, images, documents, location, deadline },
-      { returnDocument: 'after' }
+      { title, description, category, goalAmount, location, deadline, images: finalImages, documents: finalDocuments },
+      { new: true }
     );
 
     res.json(updated);
