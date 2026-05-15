@@ -5,8 +5,8 @@ import { Outlet, useLocation } from "react-router-dom";
 function RootLayout() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
-  const isHome = location.pathname === "/";
-  const isFullWidth = isAdmin || isHome;
+  const FULL_WIDTH_PATHS = ["/", "/donate", "/trust-us", "/raise"];
+  const isFullWidth = isAdmin || FULL_WIDTH_PATHS.includes(location.pathname);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
