@@ -109,6 +109,23 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
+// GET /api/admin/users/:id/details — single user + their campaigns + donations
+export const getUserDetails = async (req, res) => {
+  try {
+    const [user, campaigns, donations] = await Promise.all([
+      User.findById(req.params.id).select("-passwordHash"),
+      Campaign.find({ creatorId: req.params.id }).sort({ createdAt: -1 }),
+      Donation.find({ donorId: req.params.id, paymentStatus: "completed" })
+        .populate("campaignId", "title images")
+        .sort({ createdAt: -1 }),
+    ]);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json({ user, campaigns, donations });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 // GET /api/admin/transactions — all completed donations
 export const getTransactions = async (req, res) => {
   try {

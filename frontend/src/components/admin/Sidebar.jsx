@@ -1,27 +1,40 @@
 import { useAuth } from "../../store/authStore";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaChartLine, FaClipboardList, FaDollarSign, FaUsers, FaSignOutAlt } from "react-icons/fa";
+import toast from "react-hot-toast";
 
 function AdminSidebar() {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const menuItems = [
-    { path: "/admin", icon: FaChartLine, label: "Dashboard" },
-    { path: "/admin/campaigns", icon: FaClipboardList, label: "Campaigns" },
-    { path: "/admin/transactions", icon: FaDollarSign, label: "Transactions" },
-    { path: "/admin/users", icon: FaUsers, label: "Users" },
+    { path: "/admin",              icon: FaChartLine,    label: "Dashboard"    },
+    { path: "/admin/campaigns",    icon: FaClipboardList,label: "Campaigns"    },
+    { path: "/admin/transactions", icon: FaDollarSign,   label: "Transactions" },
+    { path: "/admin/users",        icon: FaUsers,        label: "Users"        },
   ];
 
+  const handleLogout = async () => {
+    await logout();
+    toast.success("Logged out");
+    navigate("/login");
+  };
+
   return (
-    <div className="w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-2xl">
+    <div className="w-56 bg-gray-900 text-white rounded-2xl shadow-md flex flex-col">
+      {/* Brand */}
       <div className="p-6 border-b border-gray-700">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-emerald-500 bg-clip-text text-transparent">
+        <h2 className="text-xl font-black bg-linear-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
           Admin Panel
         </h2>
+        {user && (
+          <p className="text-gray-400 text-xs mt-1 truncate">{user.email}</p>
+        )}
       </div>
 
-      <nav className="p-4 space-y-2">
+      {/* Nav */}
+      <nav className="p-3 space-y-1 flex-1">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const active = location.pathname === item.path;
@@ -29,26 +42,27 @@ function AdminSidebar() {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-300 ${
-                active 
-                  ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/25 transform -translate-x-1" 
-                  : "hover:bg-gray-700 hover:transform hover:translate-x-1"
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium ${
+                active
+                  ? "bg-linear-to-r from-emerald-500 to-emerald-600 text-white shadow-lg"
+                  : "text-gray-300 hover:bg-gray-700/60 hover:text-white"
               }`}
             >
-              <Icon className="text-xl" />
-              <span className="font-medium">{item.label}</span>
+              <Icon className="text-base shrink-0" />
+              {item.label}
             </Link>
           );
         })}
       </nav>
 
-      <div className="absolute bottom-4 left-4 right-4">
+      {/* Logout */}
+      <div className="p-3 border-t border-gray-700">
         <button
-          onClick={logout}
-          className="w-full flex items-center gap-3 p-3 text-left rounded-xl hover:bg-gray-600/30 hover:text-gray-300 transition-all duration-300"
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-red-500/20 hover:text-red-300 transition-all text-sm font-medium"
         >
-          <FaSignOutAlt />
-          <span>Logout</span>
+          <FaSignOutAlt className="shrink-0" />
+          Logout
         </button>
       </div>
     </div>

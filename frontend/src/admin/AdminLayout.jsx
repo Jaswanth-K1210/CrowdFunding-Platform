@@ -13,16 +13,27 @@ function AdminLayout() {
     }
   }, [user, authLoading]);
 
-  if (authLoading) return <p className="text-center py-10">Loading...</p>;
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
   if (!user || user.role !== "admin") return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-24 pb-0">
-      <div className="flex gap-8">
-        <AdminSidebar />
-        <div className="flex-1 bg-white/70 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 p-8">
-          <Outlet />
+    <div className="min-h-screen bg-gray-50 pt-20">
+      <div className="max-w-screen-xl mx-auto px-6 py-6 flex gap-6 items-start">
+        {/* Sticky sidebar */}
+        <div className="sticky top-24 shrink-0 self-start">
+          <AdminSidebar />
         </div>
+
+        {/* Scrollable content */}
+        <main className="flex-1 min-w-0 bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
+          <Outlet />
+        </main>
       </div>
     </div>
   );

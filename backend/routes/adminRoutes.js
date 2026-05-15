@@ -6,6 +6,7 @@ import {
   approveCampaign,
   rejectCampaign,
   getAllUsers,
+  getUserDetails,
   getTransactions,
 } from "../controllers/adminController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
@@ -22,6 +23,7 @@ router.get("/campaigns", getAllCampaigns);
 router.put("/campaigns/:id/approve", approveCampaign);
 router.put("/campaigns/:id/reject", rejectCampaign);
 router.get("/users", getAllUsers);
+router.get("/users/:id/details", getUserDetails);
 router.get("/transactions", getTransactions);
 
 export default router;
