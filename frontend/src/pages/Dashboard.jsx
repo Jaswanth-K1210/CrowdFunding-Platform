@@ -470,6 +470,8 @@ function OverviewTab({ campaigns, donations, user }) {
   );
 }
 
+import CampaignCard from "../components/campaign/CampaignCard.jsx";
+
 // ─── TAB: My Campaigns ────────────────────────────────────────────────────────
 function CampaignsTab({ campaigns, onEdit, onDelete }) {
   const [expandedId, setExpandedId] = useState(null);
@@ -483,7 +485,10 @@ function CampaignsTab({ campaigns, onEdit, onDelete }) {
           <h2 className="text-2xl font-black text-gray-800">My Campaigns</h2>
           <p className="text-gray-500 text-sm">{campaigns.length} campaign{campaigns.length !== 1 ? "s" : ""}</p>
         </div>
-        <Link to="/raise" className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold text-sm hover:from-emerald-600 hover:to-emerald-700 shadow-md transition-all">
+        <Link
+          to="/raise"
+          className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold text-sm hover:from-emerald-600 hover:to-emerald-700 shadow-md transition-all"
+        >
           + New Campaign
         </Link>
       </div>
@@ -497,53 +502,50 @@ function CampaignsTab({ campaigns, onEdit, onDelete }) {
       ) : (
         <div className="space-y-4">
           {campaigns.map((c) => {
-            const pct = c.goalAmount > 0 ? Math.min(((c.raisedAmount || 0) / c.goalAmount) * 100, 100) : 0;
-            const daysLeft = Math.max(0, Math.ceil((new Date(c.deadline) - new Date()) / 86400000));
             const isExpanded = expandedId === c._id;
 
             return (
-              <div key={c._id} className="bg-white rounded-2xl border shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-                {/* Campaign info */}
-                <div className="flex gap-4 p-4">
-                  <img
-                    src={c.images?.[0] || "https://placehold.co/80x80/e2e8f0/94a3b8?text=CF"}
-                    alt={c.title}
-                    className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <h3 className="font-bold text-gray-800 line-clamp-1">{c.title}</h3>
+              <div
+                key={c._id}
+                className="bg-white rounded-2xl border shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+              >
+                {/* Shared CampaignCard visuals */}
+                <div className="p-3 sm:p-4">
+                  <div className="relative rounded-2xl overflow-hidden">
+                    <div className="ring-1 ring-gray-100 rounded-2xl">
+                      <CampaignCard campaign={c} />
+                    </div>
+
+                    <div className="absolute top-3 left-3">
                       <StatusBadge status={c.status} />
                     </div>
-                    <p className="text-sm text-gray-500 capitalize mb-2">{c.category}</p>
-                    <div className="flex items-center gap-3 text-sm mb-2">
-                      <span className="font-semibold text-emerald-600">{formatCurrency(c.raisedAmount || 0)}</span>
-                      <span className="text-gray-400">of {formatCurrency(c.goalAmount)}</span>
-                      <span className="ml-auto text-gray-400 text-xs">{daysLeft > 0 ? `${daysLeft}d left` : "Ended"}</span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-1.5 mb-1">
-                      <div className="h-1.5 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600" style={{ width: `${pct}%` }} />
-                    </div>
-                    <p className="text-xs text-gray-400">{pct.toFixed(1)}% funded · <FaUsers className="inline text-[10px]" /> {c.donorCount || 0} donors</p>
+
+                    {c.adminNote && c.status === "rejected" && (
+                      <div className="absolute bottom-3 left-3 right-3">
+                        <div className="px-3 py-2 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600">
+                          <span className="font-semibold">Admin note:</span> {c.adminNote}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Admin rejection note */}
-                {c.adminNote && c.status === "rejected" && (
-                  <div className="mx-4 mb-3 px-3 py-2 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600">
-                    <span className="font-semibold">Admin note:</span> {c.adminNote}
-                  </div>
-                )}
-
-                {/* Action bar */}
+                {/* Action bar (functionality unchanged) */}
                 <div className="border-t px-4 py-3 flex gap-2 bg-gray-50 flex-wrap">
-                  <Link to={`/campaign/${c._id}`} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border rounded-lg hover:bg-gray-100 transition-colors">
+                  <Link
+                    to={`/campaign/${c._id}`}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border rounded-lg hover:bg-gray-100 transition-colors"
+                  >
                     <FaEye /> View
                   </Link>
-                  <button onClick={() => onEdit(c)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors">
+
+                  <button
+                    onClick={() => onEdit(c)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
+                  >
                     <FaEdit /> Edit
                   </button>
-                  {/* Toggle donations */}
+
                   <button
                     onClick={() => toggleExpand(c._id)}
                     className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
@@ -556,7 +558,11 @@ function CampaignsTab({ campaigns, onEdit, onDelete }) {
                     Donations ({c.donorCount || 0})
                     {isExpanded ? <FaChevronUp className="text-[9px]" /> : <FaChevronDown className="text-[9px]" />}
                   </button>
-                  <button onClick={() => onDelete(c)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors ml-auto">
+
+                  <button
+                    onClick={() => onDelete(c)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors ml-auto"
+                  >
                     <FaTrash /> Delete
                   </button>
                 </div>
@@ -575,6 +581,7 @@ function CampaignsTab({ campaigns, onEdit, onDelete }) {
     </div>
   );
 }
+
 
 // ─── TAB: My Transactions (donations I made) ──────────────────────────────────
 function TransactionsTab({ donations }) {

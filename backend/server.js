@@ -38,6 +38,8 @@ app.get("/", (req, res) => {
 });
 
 // MongoDB Atlas connection
+const PORT = process.env.PORT || 5000;
+
 mongoose
   .connect(process.env.MONGO_URI, {
     tls: true,
@@ -46,36 +48,44 @@ mongoose
   .then(async () => {
     console.log("Connected to MongoDB Atlas");
 
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+
     // Ensure all collections exist in Atlas
-    const db = mongoose.connection.db;
-    const existing = (await db.listCollections().toArray()).map((c) => c.name);
-    const required = ["users", "campaigns", "donations", "comments"];
+    try {
+      const db = mongoose.connection.db;
+      const existing = (await db.listCollections().toArray()).map((c) => c.name);
+      const required = ["users", "campaigns", "donations", "comments"];
 
-    for (const name of required) {
-      if (!existing.includes(name)) {
-        await db.createCollection(name);
-        console.log(`Created collection: ${name}`);
+      for (const name of required) {
+        if (!existing.includes(name)) {
+          await db.createCollection(name);
+          console.log(`Created collection: ${name}`);
+        }
       }
-    }
 
-    // Seed admin user if not already in DB
-    const adminExists = await User.findOne({ role: "admin" });
-    if (!adminExists) {
-      const salt = await bcrypt.genSalt(10);
-      const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, salt);
-      await User.create({
-        name: process.env.ADMIN_NAME,
-        email: process.env.ADMIN_EMAIL,
-        passwordHash,
-        role: "admin",
-        isVerified: true,
-      });
-      console.log("Admin user created");
+      // Seed admin user if not already in DB
+      const adminExists = await User.findOne({ role: "admin" });
+      if (!adminExists) {
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, salt);
+        await User.create({
+          name: process.env.ADMIN_NAME,
+          email: process.env.ADMIN_EMAIL,
+          passwordHash,
+          role: "admin",
+          isVerified: true,
+        });
+        console.log("Admin user created");
+      }
+    } catch (e) {
+      console.error("Post-connect init error:", e);
     }
   })
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+    process.exit(1);
+  });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+

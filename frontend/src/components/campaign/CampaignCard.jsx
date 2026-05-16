@@ -15,6 +15,22 @@ function CampaignCard({ campaign }) {
           alt={campaign.title}
           className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
         />
+        {Array.isArray(campaign.images) && campaign.images.length > 1 && (
+          <div className="absolute top-3 left-3 flex gap-1">
+            {campaign.images.slice(0, 4).map((url, i) => (
+              <img
+                key={url + i}
+                src={url}
+                alt=""
+                className={
+                  "w-8 h-8 rounded-lg object-cover border border-white shadow-sm " +
+                  (i === 0 ? "opacity-100" : "opacity-70")
+                }
+              />
+            ))}
+          </div>
+        )}
+
         {/* Overlay gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         {/* Title overlay */}
@@ -80,3 +96,4 @@ function CampaignCard({ campaign }) {
 }
 
 export default CampaignCard;
+
