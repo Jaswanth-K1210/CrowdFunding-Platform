@@ -20,9 +20,11 @@ import { campaignService } from "../services/campaignService";
 import { donationService } from "../services/donationService";
 import { useAuth } from "../store/authStore";
 import { formatCurrency } from "../utils/formatCurrency";
-import ProgressBar from "../components/common/ProgressBar";
+
 import CommentList from "../components/comments/CommentList";
 import CommentInput from "../components/comments/CommentInput";
+import ImageGallery from "../components/common/ImageGallery";
+
 
 function CampaignDetail() { 
 
@@ -167,149 +169,155 @@ function CampaignDetail() {
     return `${base} bg-red-100 text-red-700`;
   })();
 
-  const percent = (() => {
-    const goal = Number(campaign.goalAmount) || 0;
-    const raised = Number(campaign.raisedAmount) || 0;
-    if (!goal) return 0;
-    return Math.max(0, Math.min(100, Math.round((raised / goal) * 100)));
-  }, [campaign.goalAmount, campaign.raisedAmount]);
+
 
   const shareCampaign = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Link copied!");
   };
 
+  // UI-only helpers for dashboard-like widgets
+  const daysLeft = (() => {
+    if (!campaign?.deadline) return 0;
+    const diff = new Date(campaign.deadline).getTime() - Date.now();
+    return diff > 0 ? Math.ceil(diff / (1000 * 60 * 60 * 24)) : 0;
+  })();
+
+  const raised = Number(campaign.raisedAmount || 0);
+  const goal = Number(campaign.goalAmount || 0);
+  const pct = goal > 0 ? Math.min((raised / goal) * 100, 100) : 0;
+
+  const donorsCount = donations?.length ? donations.length : campaign.donorCount || 0;
+
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-emerald-50/70 via-white to-white py-6 sm:py-10 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
+    <div className="min-h-screen overflow-x-hidden bg-gray-50 py-4 sm:py-6 lg:py-8 px-4 sm:px-6">
+      <div className="mx-auto max-w-6xl">
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start"
+          transition={{ duration: 0.35 }}
+          className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start"
         >
           {/* Left */}
-          <div className="lg:col-span-8 space-y-7">
-            {/* Hero image */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.35 }}
-              className="relative overflow-hidden rounded-3xl bg-white shadow-sm"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/15 via-transparent to-teal-600/15" />
-              <div className="relative p-2">
-                <div className="overflow-hidden rounded-3xl bg-gray-100 shadow-inner">
-                  <div className="aspect-[16/9] sm:aspect-[21/9]">
-                    <img
-  src={
-    campaign.images?.[0] ||
-    "https://placehold.co/1200x675?text=Campaign"
-  }
-  alt={campaign.title}
-  className="h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-105"
-/>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Header card */}
+          <div className="lg:col-span-8 space-y-5 sm:space-y-6">
+            {/* Hero banner from existing campaign.images */}
             <motion.section
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: 0.04 }}
-              className="rounded-3xl bg-white shadow-sm p-5 sm:p-6"
+              transition={{ duration: 0.35, delay: 0.02 }}
+              className="rounded-3xl overflow-hidden bg-white border border-gray-100 shadow-sm"
             >
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                <span className={statusBadge}>{campaign.status}</span>
-                <span className="text-xs sm:text-sm text-gray-500 font-medium">
-                  {campaign.category}
-                </span>
-                {campaign.status === "approved" && (
-                  <span className="ml-auto inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                    <FaShieldAlt className="text-emerald-600" /> Verified Campaign
-                  </span>
-                )}
-              </div>
+              {campaign.images?.[0] && (
+                <div className="relative">
+                  <img
+                    src={campaign.images[0]}
+                    alt={campaign.title}
+                    className="h-44 sm:h-52 w-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/40" />
+                  <div className="absolute inset-x-0 top-4 px-4 sm:px-6">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                      <span className={statusBadge}>{campaign.status}</span>
+                      <span className="text-xs sm:text-sm bg-white/90 backdrop-blur px-3 py-1 rounded-full text-gray-700 font-medium">
+                        {campaign.category}
+                      </span>
+                      {campaign.status === "approved" && (
+                        <span className="ml-auto inline-flex items-center gap-2 rounded-full bg-white/90 backdrop-blur border border-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                          <FaShieldAlt className="text-emerald-600" /> Verified
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
 
-              <h1 className="mt-4 text-3xl sm:text-4xl font-bold leading-tight tracking-tight">
-                {campaign.title}
-              </h1>
-
-              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="flex items-center gap-3 rounded-2xl bg-emerald-50/60 px-4 py-3">
-                  <FaMapMarkerAlt className="text-emerald-600" />
-                  <div>
-                    <div className="text-xs text-gray-500">Location</div>
-                    <div className="text-sm font-semibold text-gray-800">
-                      {campaign.location}
+              <div className="p-4 sm:p-6">
+                <div className="flex items-start gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-teal-600 to-emerald-500 flex items-center justify-center text-white text-xl font-black shadow-md">
+                    {(campaign.creatorId?.name || "?").split(" ")[0]?.[0]?.toUpperCase() || "?"}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h1 className="text-2xl sm:text-3xl font-black text-gray-900 leading-tight tracking-tight">
+                      {campaign.title}
+                    </h1>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-2 rounded-2xl border border-gray-100 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-700">
+                        <FaMapMarkerAlt className="text-emerald-600" />
+                        <span className="line-clamp-1">{campaign.location}</span>
+                      </span>
+                      <span className="inline-flex items-center gap-2 rounded-2xl border border-gray-100 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-700">
+                        <FaCalendarAlt className="text-emerald-600" />
+                        <span>{new Date(campaign.deadline).toLocaleDateString()}</span>
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 rounded-2xl bg-gray-50 px-4 py-3">
-                  <FaCalendarAlt className="text-emerald-600" />
-                  <div>
-                    <div className="text-xs text-gray-500">Deadline</div>
-                    <div className="text-sm font-semibold text-gray-800">
-                      {new Date(campaign.deadline).toLocaleDateString()}
-                    </div>
+                {/* Compact stats row */}
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-3">
+                    <div className="text-xs text-gray-500 font-medium">Goal Amount</div>
+                    <div className="text-lg font-black text-gray-900">{formatCurrency(campaign.goalAmount)}</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-3">
+                    <div className="text-xs text-gray-500 font-medium">Funds Raised</div>
+                    <div className="text-lg font-black text-emerald-700">{formatCurrency(campaign.raisedAmount)}</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-3">
+                    <div className="text-xs text-gray-500 font-medium">Donors</div>
+                    <div className="text-lg font-black text-gray-900">{donorsCount}</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-3">
+                    <div className="text-xs text-gray-500 font-medium">Days Left</div>
+                    <div className="text-lg font-black text-gray-900">{daysLeft}</div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 rounded-2xl bg-gray-50 px-4 py-3">
-                  <FaUsers className="text-emerald-600" />
-                  <div>
-                    <div className="text-xs text-gray-500">Donors</div>
-                    <div className="text-sm font-semibold text-gray-800">
-                      {campaign.donorCount} supporters
+                {/* Progress widget */}
+                <div className="mt-4 rounded-2xl border border-gray-100 bg-white p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-xs text-gray-500">Progress</div>
+                      <div className="text-lg font-black text-gray-900">{Math.round(pct)}%</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-gray-500">Raised</div>
+                      <div className="text-sm font-semibold text-emerald-700">{formatCurrency(raised)}</div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-3 rounded-2xl bg-gray-50 px-4 py-3">
-                  <FaHandHoldingHeart className="text-emerald-600" />
-                  <div>
-                    <div className="text-xs text-gray-500">Creator</div>
-                    <div className="text-sm font-semibold text-gray-800">
-                      {campaign.creatorId?.name || "Unknown"}
+                  <div className="mt-3">
+                    <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                      <div
+                        className="h-2.5 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all duration-500"
+                        style={{ width: `${pct}%` }}
+                      />
                     </div>
                   </div>
-                </div>
-              </div>
 
-              <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-600/10 to-teal-600/10 px-4 py-3">
-                <div>
-                  <div className="text-xs text-gray-500">Raised</div>
-                  <div className="text-lg font-bold text-gray-900">
-                    {formatCurrency(campaign.raisedAmount)}
-                  </div>
-                </div>
-                <div className="h-6 w-px bg-emerald-200/70" />
-                <div>
-                  <div className="text-xs text-gray-500">Funding</div>
-                  <div className="text-lg font-bold text-emerald-700">{percent}%</div>
-                </div>
-                <div className="ml-auto text-right">
-                  <div className="text-xs text-gray-500">Goal</div>
-                  <div className="text-sm font-semibold text-gray-800">
-                    {formatCurrency(campaign.goalAmount)}
+                  <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                    <span>Goal: {formatCurrency(goal)}</span>
+                    <span>{Math.round(pct)}% of goal</span>
                   </div>
                 </div>
               </div>
             </motion.section>
+
+            {/* Preserve existing image gallery functionality */}
+            <ImageGallery images={campaign.images} title={campaign.title} />
 
             {/* Story */}
             <motion.section
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-80px" }}
-              className="rounded-3xl bg-white shadow-sm p-5 sm:p-6"
+              className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6 hover:shadow-md transition-all duration-300"
             >
               <div className="flex items-center gap-3 mb-3">
-                <FaDonate className="text-emerald-600" />
-                <h2 className="text-xl sm:text-2xl font-semibold">Story</h2>
+                <div className="h-10 w-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+                  <FaDonate className="text-emerald-600" />
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black text-gray-800">Story</h2>
               </div>
               <p className="text-gray-700 whitespace-pre-wrap leading-relaxed text-sm sm:text-base">
                 {campaign.description}
@@ -322,29 +330,29 @@ function CampaignDetail() {
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-80px" }}
-                className="rounded-3xl bg-white shadow-sm p-5 sm:p-6"
+                className="rounded-3xl bg-white border border-gray-100 shadow-sm p-5 sm:p-6 hover:shadow-md transition-all duration-300"
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <FaFileAlt className="text-emerald-600" />
-                  <h2 className="text-xl sm:text-2xl font-semibold">Documents & Proof</h2>
+                  <div className="h-10 w-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+                    <FaFileAlt className="text-emerald-600" />
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black text-gray-800">Documents & Proof</h2>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {campaign.documents.map((doc, index) => (
                     <a
                       key={index}
                       href={doc}
                       target="_blank"
                       rel="noreferrer"
-                      className="group flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50/60 px-4 py-3 transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50/40"
+                      className="group flex items-center justify-between rounded-2xl border border-gray-100 bg-white px-4 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50/40"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-2xl bg-white shadow-sm flex items-center justify-center">
+                        <div className="h-10 w-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
                           <FaFileAlt className="text-emerald-700" />
                         </div>
                         <div>
-                          <div className="text-sm font-semibold text-gray-900">
-                            Document {index + 1}
-                          </div>
+                          <div className="text-sm font-semibold text-gray-900">Document {index + 1}</div>
                           <div className="text-xs text-gray-500">Open in new tab</div>
                         </div>
                       </div>
@@ -361,11 +369,13 @@ function CampaignDetail() {
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-80px" }}
-                className="rounded-3xl bg-white shadow-sm p-5 sm:p-6"
+                className="rounded-3xl bg-white border border-gray-100 shadow-sm p-5 sm:p-6 hover:shadow-md transition-all duration-300"
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <FaUsers className="text-emerald-600" />
-                  <h2 className="text-xl sm:text-2xl font-semibold">Recent Donors</h2>
+                  <div className="h-10 w-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+                    <FaUsers className="text-emerald-600" />
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black text-gray-800">Recent Donors</h2>
                 </div>
                 <div className="space-y-2">
                   {donations.slice(0, 10).map((d) => {
@@ -379,23 +389,19 @@ function CampaignDetail() {
                     return (
                       <div
                         key={d._id}
-                        className="group flex items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-white px-4 py-3 transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-sm"
+                        className="group flex items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-white px-4 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-sm"
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
                           <div className="h-10 w-10 rounded-2xl bg-emerald-600/10 text-emerald-800 flex items-center justify-center font-bold">
                             {initials || "—"}
                           </div>
                           <div className="min-w-0">
-                            <div className="text-sm font-semibold text-gray-900 truncate">
-                              {name}
-                            </div>
+                            <div className="text-sm font-semibold text-gray-900 truncate">{name}</div>
                             <div className="text-xs text-gray-500">Supporter</div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-bold text-gray-900">
-                            {formatCurrency(d.amount)}
-                          </div>
+                          <div className="text-sm font-black text-emerald-700">{formatCurrency(d.amount)}</div>
                           <div className="text-xs text-emerald-700 font-semibold">Thank you</div>
                         </div>
                       </div>
@@ -410,11 +416,13 @@ function CampaignDetail() {
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-80px" }}
-              className="rounded-3xl bg-white shadow-sm p-5 sm:p-6"
+              className="rounded-3xl bg-white border border-gray-100 shadow-sm p-5 sm:p-6 hover:shadow-md transition-all duration-300"
             >
               <div className="flex items-center gap-3 mb-3">
-                <FaHandHoldingHeart className="text-emerald-600" />
-                <h2 className="text-xl sm:text-2xl font-semibold">Comments</h2>
+                <div className="h-10 w-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+                  <FaHandHoldingHeart className="text-emerald-600" />
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black text-gray-800">Comments</h2>
               </div>
               <CommentList comments={comments} />
               <div className="mt-4">
@@ -427,7 +435,7 @@ function CampaignDetail() {
           <div className="lg:col-span-4">
             <div className="lg:sticky lg:top-24 space-y-5">
               <motion.aside
-                initial={{ opacity: 0, y: 14 }}
+                initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-80px" }}
                 className="rounded-3xl bg-white shadow-xl ring-1 ring-emerald-100/60 overflow-hidden"
@@ -437,50 +445,43 @@ function CampaignDetail() {
                   <div className="relative p-5 sm:p-6">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <div className="text-xs text-gray-500">Total Raised</div>
-                        <div className="text-2xl font-extrabold text-gray-900">
-                          {formatCurrency(campaign.raisedAmount)}
-                        </div>
+                        <div className="text-xs text-gray-500">Target</div>
+                        <div className="text-2xl font-extrabold text-gray-900">{formatCurrency(campaign.goalAmount)}</div>
                       </div>
                       <div className="text-right">
-                        <div className="text-xs text-gray-500">Goal</div>
-                        <div className="text-sm font-semibold text-gray-800">
-                          {formatCurrency(campaign.goalAmount)}
-                        </div>
+                        <div className="text-xs text-gray-500">Status</div>
+                        <div className="text-sm font-semibold text-gray-800">{campaign.status}</div>
                         <div className="mt-1 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                           <FaShieldAlt className="text-emerald-700" /> Secure
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-4">
-                      <ProgressBar raised={campaign.raisedAmount} goal={campaign.goalAmount} />
-                    </div>
-
                     {campaign.status !== "approved" ? (
                       <div className="mt-5 rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                        <p className="text-sm text-gray-700">
-                          Donations unlock once this campaign is approved.
-                        </p>
+                        <p className="text-sm text-gray-700">Donations are available once this campaign is approved.</p>
                       </div>
                     ) : (
                       <div className="mt-5 space-y-3">
-                        <div className="grid grid-cols-4 gap-2">
-                          {[
-                            { label: "₹100", value: 100 },
-                            { label: "₹500", value: 500 },
-                            { label: "₹1000", value: 1000 },
-                            { label: "₹5000", value: 5000 },
-                          ].map((b) => (
-                            <button
-                              key={b.value}
-                              type="button"
-                              onClick={() => setDonateAmount(String(b.value))}
-                              className="rounded-2xl border border-emerald-200 bg-emerald-50/70 px-2 py-2 text-xs font-bold text-emerald-800 transition-all hover:-translate-y-0.5 hover:bg-emerald-100 active:translate-y-0"
-                            >
-                              {b.label}
-                            </button>
-                          ))}
+                        <div>
+                          <div className="text-xs text-gray-500 font-semibold mb-2">Quick amounts</div>
+                          <div className="grid grid-cols-4 gap-2">
+                            {[
+                              { label: "₹100", value: 100 },
+                              { label: "₹500", value: 500 },
+                              { label: "₹1000", value: 1000 },
+                              { label: "₹5000", value: 5000 },
+                            ].map((b) => (
+                              <button
+                                key={b.value}
+                                type="button"
+                                onClick={() => setDonateAmount(String(b.value))}
+                                className="rounded-2xl border border-emerald-200 bg-emerald-50/70 px-2 py-2 text-xs font-bold text-emerald-800 transition-all hover:-translate-y-0.5 hover:bg-emerald-100 active:translate-y-0"
+                              >
+                                {b.label}
+                              </button>
+                            ))}
+                          </div>
                         </div>
 
                         <div className="relative">
@@ -519,11 +520,7 @@ function CampaignDetail() {
                           className="w-full rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-3 font-extrabold text-base shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-70"
                         >
                           <span className="inline-flex items-center justify-center gap-2">
-                            {donating ? (
-                              <FaSpinner className="animate-spin" />
-                            ) : (
-                              <FaDonate />
-                            )}
+                            {donating ? <FaSpinner className="animate-spin" /> : <FaDonate />}
                             {donating ? "Processing..." : "Donate Now"}
                           </span>
                         </motion.button>
@@ -540,8 +537,7 @@ function CampaignDetail() {
                         onClick={shareCampaign}
                         className="inline-flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50/70 px-3 py-2 text-xs font-bold text-emerald-800 transition-all hover:bg-emerald-100 active:translate-y-0"
                       >
-                        <FaRegShareSquare className="text-emerald-700" />
-                        Share
+                        <FaRegShareSquare className="text-emerald-700" /> Share
                       </button>
                     </div>
                   </div>
